@@ -1,0 +1,241 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─────────────────────────────────────────
+   Design Tokens — Dark Navy × Purple
+───────────────────────────────────────── */
+@layer base {
+  :root {
+    --bg: #020617; /* Slate-950 */
+    --bg-alt: #020617; /* đồng bộ luôn */
+    --surface: #0f172a; /* Slate-900 */
+    --surface-2: #111827; /* Slate-800 */
+    --border: rgba(255, 255, 255, 0.06);
+
+    --primary: #4f46e5; /* indigo-600 */
+    --primary-h: #7c3aed; /* violet-600 */
+    --primary-soft: rgba(124, 58, 237, 0.15);
+
+    --bg-gray: rgba(51, 65, 85, 0.5);
+
+    --bg-linear-gradient: linear-gradient(
+      90deg,
+      rgba(109, 67, 245, 0.06),
+      rgba(88, 28, 135, 0.04)
+    );
+
+    --text: #ffffff;
+    --text-muted: rgba(255, 255, 255, 0.55);
+    --text-subtle: rgba(255, 255, 255, 0.3);
+  }
+
+  html {
+    font-family: "Be Vietnam Pro", system-ui, sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply antialiased;
+    background-color: var(--bg);
+  }
+  * {
+    border-color: var(--border);
+  }
+  ::selection {
+    background: rgba(109, 67, 245, 0.35);
+    color: #fff;
+  }
+}
+
+@layer components {
+  /* ── Buttons ── */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold
+           transition-all duration-200 focus:outline-none disabled:pointer-events-none disabled:opacity-40;
+  }
+  .btn-primary {
+    @apply btn text-white;
+    background: var(--primary);
+  }
+  .btn-primary:hover {
+    background: var(--primary-h);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 28px rgba(109, 67, 245, 0.45);
+  }
+  .btn-secondary {
+    @apply btn text-white;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+  .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.13);
+    transform: translateY(-1px);
+  }
+  .btn-dark {
+    @apply btn text-white;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+  .btn-dark:hover {
+    background: rgba(255, 255, 255, 0.16);
+    transform: translateY(-1px);
+  }
+  .btn-danger {
+    @apply btn text-white bg-red-600 hover:bg-red-500;
+  }
+  .btn-outline {
+    @apply btn;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: var(--text-muted);
+  }
+  .btn-outline:hover {
+    border-color: rgba(255, 255, 255, 0.35);
+    color: var(--text);
+  }
+
+  /* ── Cards ── */
+  .card {
+    @apply rounded-2xl;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .card-body {
+    @apply p-6;
+  }
+  .card-glass {
+    @apply rounded-2xl;
+    background: #0f172a;
+    border: 1px solid #334155;
+    backdrop-filter: blur(16px);
+  }
+
+  /* ── Form ── */
+  .input {
+    @apply block w-full rounded-xl px-4 py-2.5 text-sm transition-all focus:outline-none;
+    background: var(--surface-2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text);
+  }
+  .input::placeholder {
+    color: var(--text-subtle);
+  }
+  .input:focus {
+    border-color: rgba(109, 67, 245, 0.6);
+    box-shadow: 0 0 0 3px rgba(109, 67, 245, 0.15);
+  }
+  .label {
+    @apply block text-sm font-medium mb-1.5;
+    color: var(--text-muted);
+  }
+
+  /* ── Badges ── */
+  .badge {
+    @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-medium;
+  }
+  .badge-purple {
+    @apply badge;
+    background: rgba(109, 67, 245, 0.18);
+    border: 1px solid rgba(109, 67, 245, 0.3);
+    color: #c4b5fd;
+  }
+  .badge-green {
+    @apply badge;
+    background: rgba(34, 197, 94, 0.13);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    color: #86efac;
+  }
+  .badge-red {
+    @apply badge;
+    background: rgba(239, 68, 68, 0.13);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+  }
+  .badge-blue {
+    @apply badge;
+    background: rgba(59, 130, 246, 0.13);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    color: #93c5fd;
+  }
+  .badge-yellow {
+    @apply badge;
+    background: rgba(234, 179, 8, 0.13);
+    border: 1px solid rgba(234, 179, 8, 0.2);
+    color: #fde047;
+  }
+
+  /* ── GPT pill (hero) ── */
+  .badge-gpt {
+    @apply inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium;
+    background: rgba(109, 67, 245, 0.18);
+    border: 1px solid rgba(109, 67, 245, 0.35);
+    color: #c4b5fd;
+  }
+  .badge-gpt-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #a78bfa;
+    box-shadow: 0 0 8px #a78bfa;
+    flex-shrink: 0;
+  }
+
+  /* ── Navbar ── */
+  .navbar {
+    background: rgba(10, 13, 42, 0.75);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(20px);
+  }
+
+  /* ── Heading gradient ── */
+  .heading-gradient {
+    background: linear-gradient(
+      150deg,
+      #ffffff 30%,
+      rgba(196, 181, 253, 0.8) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── Hero background ── */
+  .hero-bg {
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(
+        ellipse 80% 60% at 50% -10%,
+        rgba(79, 70, 229, 0.35) 0%,
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 50% 40% at 90% 85%,
+        rgba(124, 58, 237, 0.2) 0%,
+        transparent 70%
+      );
+  }
+
+  /* ── Company logos row ── */
+  .company-name {
+    @apply text-lg font-bold tracking-wide;
+    color: rgba(255, 255, 255, 0.45);
+    transition: color 0.2s;
+  }
+  .company-name:hover {
+    color: rgba(255, 255, 255, 0.75);
+  }
+
+  /* ── Nav link ── */
+  .nav-link {
+    @apply text-sm font-medium px-3 py-2 rounded-lg transition-colors;
+    color: var(--text-muted);
+  }
+  .nav-link:hover {
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.06);
+  }
+  .nav-link.router-link-active {
+    color: var(--text);
+  }
+}
