@@ -77,6 +77,17 @@ const routes = [
     component: NotFoundView,
     meta: { title: '404 - Không tìm thấy' },
   },
+
+  /* =========================
+     Dashboard
+  ========================= */
+  {
+    path: '/dashboard',
+    name: 'dashboard',
+    component: () => import('@/views/dashboard/index.vue'),
+    meta: { title: 'Bảng điều khiển', requiresAuth: true },
+  },
+
 ]
 
 const router = createRouter({
