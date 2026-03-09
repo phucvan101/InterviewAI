@@ -29,21 +29,34 @@
                 <!-- ── Step Progress ── -->
                 <div class="flex items-center gap-0">
                     <template v-for="(step, i) in steps" :key="step.id">
+
                         <!-- Step circle -->
                         <div class="flex flex-col items-center gap-1.5 z-10">
                             <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all duration-300"
                                 :style="getStepStyle(step, i)">
                                 {{ step.id }}
                             </div>
-                            <span class="text-[11px] font-semibold whitespace-nowrap"
-                                :style="{ color: step.state === 'active' ? '#6d43f5' : step.state === 'done' ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.3)' }">
+
+                            <span class="text-[11px] font-semibold whitespace-nowrap" :style="{
+                                color:
+                                    step.state === 'active'
+                                        ? '#4f46e5'
+                                        : step.state === 'done'
+                                            ? 'rgba(255,255,255,0.7)'
+                                            : 'rgba(255,255,255,0.3)'
+                            }">
                                 {{ step.label }}
                             </span>
                         </div>
+
                         <!-- Connector -->
                         <div v-if="i < steps.length - 1"
-                            class="flex-1 h-0.5 mx-1 mb-6 rounded-full transition-all duration-500"
-                            :style="{ background: i < activeStep ? 'linear-gradient(90deg,#6d43f5,#4f32b8)' : 'rgba(255,255,255,0.1)' }" />
+                            class="flex-1 h-0.5 mx-1 mb-6 rounded-full transition-all duration-500" :style="{
+                                background:
+                                    i < activeStep
+                                        ? 'linear-gradient(90deg,#4f46e5,#4338ca)'
+                                        : 'rgba(255,255,255,0.1)'
+                            }" />
                     </template>
                 </div>
 
@@ -109,7 +122,7 @@
                         <div class="text-center">
                             <h3 class="text-sm font-bold text-white mb-1.5">{{ doc.title }}</h3>
                             <p class="text-[11.5px] leading-relaxed" style="color:rgba(255,255,255,0.42);">{{ doc.desc
-                            }}</p>
+                                }}</p>
                         </div>
                     </div>
                 </div>
@@ -121,7 +134,7 @@
                     <div class="rounded-2xl border p-6"
                         style="background:#141728; border-color:rgba(255,255,255,0.07);">
                         <div class="flex items-start justify-between mb-1">
-                            <h3 class="text-base font-black text-white leading-snug">Phân tích độ phù<br />hợp</h3>
+                            <h3 class="text-base font-black text-white leading-snug">Phân tích độ phù hợp</h3>
                             <button
                                 class="w-7 h-7 flex items-center justify-center rounded-full transition-colors hover:bg-white/10"
                                 style="color:rgba(255,255,255,0.35); margin-top:2px;">
@@ -150,8 +163,8 @@
                                         style="transition: stroke-dasharray 1s ease;" />
                                     <defs>
                                         <linearGradient id="progressGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                                            <stop offset="0%" stop-color="#6d43f5" />
-                                            <stop offset="100%" stop-color="#a78bfa" />
+                                            <stop offset="0%" stop-color="#4f46e5" />
+                                            <stop offset="100%" stop-color="#a855f7" />
                                         </linearGradient>
                                     </defs>
                                 </svg>
@@ -241,12 +254,8 @@
                 style="background:#0f1225; border-color:rgba(255,255,255,0.06);">
                 <div class="flex items-center gap-3">
                     <div class="w-9 h-9 rounded-xl flex items-center justify-center"
-                        style="background:rgba(109,67,245,0.2);">
-                        <svg class="w-5 h-5 text-[#a78bfa]" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                            stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M15.59 14.37a6 6 0 0 1-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 0 0 6.16-12.12A14.98 14.98 0 0 0 9.631 8.41m5.96 5.96a14.926 14.926 0 0 1-5.841 2.58m-.119-8.54a6 6 0 0 0-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 0 0-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 0 1-2.448-2.448 14.9 14.9 0 0 1 .06-.312m-2.24 2.39a4.493 4.493 0 0 0-1.757 4.306 4.493 4.493 0 0 0 4.306-1.758M16.5 9a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" />
-                        </svg>
+                        style="background:rgba(79,70,229,0.2);">
+                        <img src="@/assets/icon/dashboard/rocket.svg" alt="" />
                     </div>
                     <div>
                         <div class="text-sm font-bold text-white">Sẵn sàng khởi động?</div>
@@ -257,10 +266,9 @@
                 </div>
 
                 <button
-                    class="flex items-center gap-2.5 px-6 py-3 rounded-xl text-sm font-bold text-white transition-all duration-200"
-                    style="background:linear-gradient(135deg,#6d43f5,#4f32b8); box-shadow:0 4px 18px rgba(109,67,245,0.4);"
-                    @mouseenter="$event.currentTarget.style.transform = 'translateY(-1px)'; $event.currentTarget.style.boxShadow = '0 8px 24px rgba(109,67,245,0.55)'"
-                    @mouseleave="$event.currentTarget.style.transform = ''; $event.currentTarget.style.boxShadow = '0 4px 18px rgba(109,67,245,0.4)'">
+                    class="flex items-center gap-2.5 px-6 py-3 rounded-xl text-sm font-bold text-white transition-all duration-200 btn-common"
+                    @mouseenter="$event.currentTarget.style.transform = 'translateY(-1px)'; $event.currentTarget.style.boxShadow = '0 8px 24px rgba(79,70,229,0.55)'"
+                    @mouseleave="$event.currentTarget.style.transform = ''; $event.currentTarget.style.boxShadow = '0 4px 18px rgba(79,70,229,0.4)'">
                     Vào phòng phỏng vấn
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
@@ -315,9 +323,31 @@ const steps = [
 ]
 
 function getStepStyle(step, i) {
-    if (step.state === 'active') return 'background:linear-gradient(135deg,#6d43f5,#4f32b8); border-color:#6d43f5; color:#fff; box-shadow:0 0 0 4px rgba(109,67,245,0.2);'
-    if (i < activeStep.value) return 'background:#1a1e35; border-color:#6d43f5; color:#a78bfa;'
-    return 'background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.12); color:rgba(255,255,255,0.3);'
+    // Step hiện tại
+    if (step.state === 'active') {
+        return `
+            background:#4f46e5;
+            border-color:#4f46e5;
+            color:#fff;
+            box-shadow:0 0 0 4px rgba(79,70,229,0.25);
+        `
+    }
+
+    // Step đã hoàn thành
+    if (i < activeStep.value) {
+        return `
+            background:#1a1e35;
+            border-color:#4f46e5;
+            color:#4f46e5;
+        `
+    }
+
+    // Step chưa tới
+    return `
+        background:rgba(255,255,255,0.04);
+        border-color:rgba(255,255,255,0.12);
+        color:rgba(255,255,255,0.35);
+    `
 }
 
 // ── Documents ────────────────────────────────────────────────────────────────
