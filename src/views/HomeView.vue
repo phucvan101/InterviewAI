@@ -325,4 +325,7 @@ const testimonials = [
     quote: 'Phản hồi cực kỳ thành thật và hữu ích. Rất khuyến khích cho ai đang đi phỏng vấn.',
   },
 ]
+
+
+console.log('Hello World')
 </script>
