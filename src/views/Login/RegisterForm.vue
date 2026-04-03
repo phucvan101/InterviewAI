@@ -152,7 +152,8 @@
                 class="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border text-[0.85rem] font-semibold text-white/80 transition-all duration-150"
                 style="background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.09);"
                 @mouseenter="$event.currentTarget.style.background = 'rgba(255,255,255,0.09)'; $event.currentTarget.style.borderColor = 'rgba(255,255,255,0.17)'; $event.currentTarget.style.transform = 'translateY(-1px)'"
-                @mouseleave="$event.currentTarget.style.background = 'rgba(255,255,255,0.05)'; $event.currentTarget.style.borderColor = 'rgba(255,255,255,0.09)'; $event.currentTarget.style.transform = ''">
+                @mouseleave="$event.currentTarget.style.background = 'rgba(255,255,255,0.05)'; $event.currentTarget.style.borderColor = 'rgba(255,255,255,0.09)'; $event.currentTarget.style.transform = ''"
+                @click="onOAuth(provider)">
                 <span v-html="provider.icon" class="flex-shrink-0" />
                 {{ provider.name }}
             </button>
@@ -179,7 +180,7 @@ defineProps({
     },
 })
 
-const emit = defineEmits(['submit', 'switch'])
+const emit = defineEmits(['submit', 'switch', 'oauth'])
 const fullName = ref('')
 const username = ref('')
 const email = ref('')
@@ -220,5 +221,9 @@ function onSubmit() {
         full_name: fullName.value.trim(),
         password: password.value,
     })
+}
+
+function onOAuth(provider) {
+    emit('oauth', provider)
 }
 </script>

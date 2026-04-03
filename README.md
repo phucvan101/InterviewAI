@@ -14,6 +14,7 @@ Template khởi động nhanh với đầy đủ công nghệ hiện đại.
 | Vue Router | ^4.3 | SPA routing + lazy-load |
 | WebRTC | Native | P2P video/audio/data |
 | Web Speech API | Native | STT + TTS |
+| Axios | ^1.13 | HTTP client |
 
 ## 🚀 Bắt đầu nhanh
 

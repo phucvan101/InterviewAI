@@ -67,6 +67,127 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  function extractTokensFromParams(params) {
+    if (!params) return null
+
+    const accessToken =
+      params.get('access_token') ??
+      params.get('accessToken') ??
+      params.get('token') ??
+      params.get('access') ??
+      null
+    const refreshToken =
+      params.get('refresh_token') ??
+      params.get('refreshToken') ??
+      params.get('refresh') ??
+      null
+
+    if (!accessToken && !refreshToken) return null
+
+    return {
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    }
+  }
+
+  function extractAuthFromUrl(urlString) {
+    if (!urlString) return null
+    try {
+      const url = new URL(urlString)
+      const fromQuery = extractTokensFromParams(url.searchParams)
+      if (fromQuery) return fromQuery
+
+      if (url.hash) {
+        const hashParams = new URLSearchParams(url.hash.replace(/^#/, ''))
+        return extractTokensFromParams(hashParams)
+      }
+    } catch {
+      return null
+    }
+
+    return null
+  }
+
+  function parseAuthPayload(text) {
+    if (!text) return null
+    const trimmed = text.trim()
+    if (!trimmed) return null
+    try {
+      return JSON.parse(trimmed)
+    } catch {
+      return null
+    }
+  }
+
+  function openCenteredPopup(url, name = 'oauth', width = 520, height = 640) {
+    const left = window.screenX + Math.max(0, (window.outerWidth - width) / 2)
+    const top = window.screenY + Math.max(0, (window.outerHeight - height) / 2)
+    const features = `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+
+    return window.open(url, name, features)
+  }
+
+  function waitForPopupResult(popup, options = {}) {
+    const { timeoutMs = 2 * 60 * 1000, intervalMs = 500 } = options
+
+    return new Promise((resolve, reject) => {
+      const startedAt = Date.now()
+
+      const timer = setInterval(() => {
+        if (!popup) {
+          clearInterval(timer)
+          reject(new Error('Cửa sổ đăng nhập đã bị đóng.'))
+          return
+        }
+
+        try {
+          if (popup.closed) {
+            clearInterval(timer)
+            reject(new Error('Cửa sổ đăng nhập đã bị đóng.'))
+            return
+          }
+        } catch {
+          // COOP/COEP can block access while the popup is on a different origin.
+          return
+        }
+
+        if (Date.now() - startedAt > timeoutMs) {
+          clearInterval(timer)
+          popup.close()
+          reject(new Error('Đăng nhập quá thời gian chờ. Vui lòng thử lại.'))
+          return
+        }
+
+        let sameOrigin = false
+        try {
+          sameOrigin = popup.location.origin === window.location.origin
+        } catch {
+          return
+        }
+
+        if (!sameOrigin) return
+
+        let payload = null
+        try {
+          payload = extractAuthFromUrl(popup.location.href)
+        } catch {
+          payload = null
+        }
+
+        if (!payload) {
+          const text = popup.document?.body?.textContent
+          payload = parseAuthPayload(text)
+        }
+
+        if (payload) {
+          clearInterval(timer)
+          popup.close()
+          resolve(payload)
+        }
+      }, intervalMs)
+    })
+  }
+
   function saveTokens(nextAccessToken, nextRefreshToken) {
     token.value = nextAccessToken || null
     refreshToken.value = nextRefreshToken || null
@@ -189,6 +310,40 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function loginWithGoogle(options = {}) {
+    loading.value = true
+    try {
+      const { usePopup = true } = options
+      const loginUrl = buildUrl('/api/v1/auth/google/login')
+
+      if (!usePopup) {
+        window.location.href = loginUrl
+        return null
+      }
+
+      const popup = openCenteredPopup(loginUrl, 'google-oauth')
+      if (!popup) {
+        throw new Error('Trình duyệt đã chặn pop-up. Vui lòng cho phép pop-up để tiếp tục.')
+      }
+
+      const response = await waitForPopupResult(popup)
+      const normalized = normalizeAuthData(response)
+
+      if (!normalized.accessToken) {
+        throw new Error('Đăng nhập Google thành công nhưng không nhận được access token.')
+      }
+
+      saveTokens(normalized.accessToken, normalized.refreshToken)
+      if (normalized.user) {
+        user.value = normalized.user
+      }
+
+      return response
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function refreshAccessToken() {
     if (!refreshToken.value) {
       throw new Error('Không có refresh token để làm mới phiên đăng nhập.')
@@ -263,6 +418,7 @@ export const useAuthStore = defineStore('auth', () => {
     isLoggedIn, userName,
     login,
     register,
+    loginWithGoogle,
     refreshAccessToken,
     fetchProfile,
     updateProfile,

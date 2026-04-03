@@ -18,5 +18,18 @@ export default defineConfig({
     open: true,
     // Required for WebRTC HTTPS in some browsers
     https: false,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        configure: (proxy) => {
+          proxy.on('proxyRes', (proxyRes) => {
+            delete proxyRes.headers['cross-origin-opener-policy']
+            delete proxyRes.headers['cross-origin-embedder-policy']
+            delete proxyRes.headers['cross-origin-resource-policy']
+          })
+        },
+      },
+    },
   }
 })
