@@ -72,11 +72,13 @@
                 <!--Login-->
                 <!-- Header -->
                 <div v-if="!isRegisterMode">
-                    <LoginForm @submit="handleLogin" @switch="switchToRegister" :isLoading="isLoading" />
+                    <LoginForm @submit="handleLogin" @switch="switchToRegister" @oauth="handleOAuth"
+                        :isLoading="isLoading" />
                 </div>
 
                 <div v-else>
-                    <RegisterForm @submit="handleRegister" @switch="switchToLogin" :isLoading="isLoading" />
+                    <RegisterForm @submit="handleRegister" @switch="switchToLogin" @oauth="handleOAuth"
+                        :isLoading="isLoading" />
                 </div>
             </div>
         </div>
@@ -85,13 +87,14 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import BG_IMAGE from '@/assets/image/avatarAI.png'
 import LoginForm from './LoginForm.vue'
 import RegisterForm from './RegisterForm.vue'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 
 const bgImage = ref(BG_IMAGE)
@@ -135,6 +138,27 @@ async function handleRegister(payload) {
         alert('Đăng ký thành công. Vui lòng đăng nhập để tiếp tục.')
     } catch (error) {
         errorMessage.value = error?.message || 'Đăng ký thất bại. Vui lòng thử lại.'
+    } finally {
+        isLoading.value = false
+    }
+}
+
+async function handleOAuth(provider) {
+    if (!provider || provider.name !== 'Google') {
+        errorMessage.value = 'Tính năng đăng nhập này chưa được hỗ trợ.'
+        return
+    }
+
+    isLoading.value = true
+    errorMessage.value = ''
+    try {
+        await authStore.loginWithGoogle()
+        await authStore.fetchProfile()
+
+        const redirect = typeof route.query?.redirect === 'string' ? route.query.redirect : '/dashboard'
+        await router.push(redirect)
+    } catch (error) {
+        errorMessage.value = error?.message || 'Đăng nhập Google thất bại. Vui lòng thử lại.'
     } finally {
         isLoading.value = false
     }

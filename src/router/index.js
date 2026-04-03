@@ -16,6 +16,7 @@ const SpeechView = () => import('@/views/SpeechView.vue')
 const AboutView = () => import('@/views/AboutView.vue')
 const NotFoundView = () => import('@/views/NotFoundView.vue')
 const LoginView = () => import('@/views/Login/LoginView.vue')
+const AuthCallbackView = () => import('@/views/Login/AuthCallbackView.vue')
 
 const routes = [
   /* =========================
@@ -66,6 +67,12 @@ const routes = [
         meta: { title: 'Đăng nhập' },
       },
     ],
+  },
+
+
+  {
+    path: '/auth/callback',
+    component: AuthCallbackView,
   },
 
   /* =========================
