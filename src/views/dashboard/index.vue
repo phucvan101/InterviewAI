@@ -173,8 +173,9 @@
                             @dragover.prevent @drop="jdInputMode === 'file' ? onJdDrop($event) : null">
 
                             <!-- Hidden file input -->
-                            <input ref="jdFileInputRef" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="hidden"
-                                @change="onJdFileChange" />
+                            <input ref="jdFileInputRef" type="file"
+                                accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                class="hidden" @change="onJdFileChange" />
 
                             <!-- Step badge -->
                             <div class="absolute top-4 left-4 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold"
@@ -207,7 +208,7 @@
                                         :style="jdInputMode === 'file'
                                             ? 'background:rgba(59,130,246,0.2); border-color:rgba(59,130,246,0.35); color:#93c5fd;'
                                             : 'background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.12); color:rgba(255,255,255,0.65);'"
-                                        @click.stop="jdInputMode = 'file'">
+                                        @click="onJdFileChange">
                                         Upload file
                                     </button>
                                     <button class="px-2.5 py-1 rounded text-[11px] border"
@@ -267,7 +268,8 @@
                                         </svg>
                                     </div>
                                 </div>
-                                <h3 class="text-sm font-bold text-white mb-1 truncate px-2">{{ jobDescriptionFileName }}</h3>
+                                <h3 class="text-sm font-bold text-white mb-1 truncate px-2">{{ jobDescriptionFileName }}
+                                </h3>
                                 <button class="text-[11px] mt-1 underline underline-offset-2"
                                     style="color:rgba(255,255,255,0.35);" @click.stop="resetJdUpload">
                                     Tải lại
@@ -300,12 +302,13 @@
                         <div v-else-if="doc.id === 'company-research'"
                             class="relative rounded-2xl border p-5 cursor-pointer transition-all duration-200"
                             :style="getCompanyDocStyle()"
-                            @click="companyInputMode === 'file' ? onCompanyCardClick() : null"
-                            @dragover.prevent @drop="companyInputMode === 'file' ? onCompanyDrop($event) : null">
+                            @click="companyInputMode === 'file' ? onCompanyCardClick() : null" @dragover.prevent
+                            @drop="companyInputMode === 'file' ? onCompanyDrop($event) : null">
 
                             <!-- Hidden file input -->
-                            <input ref="companyFileInputRef" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf" class="hidden"
-                                @change="onCompanyFileChange" />
+                            <input ref="companyFileInputRef" type="file"
+                                accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
+                                class="hidden" @change="onCompanyFileChange" />
 
                             <!-- Step badge -->
                             <div class="absolute top-4 left-4 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold"
@@ -408,7 +411,8 @@
                             <!-- State: ERROR -->
                             <div v-else-if="companyUploadState === 'error'" class="text-center">
                                 <h3 class="text-sm font-bold mb-1" style="color:#f87171;">Tải lên thất bại</h3>
-                                <p class="text-[11px] mb-2" style="color:rgba(255,255,255,0.4);">{{ companyErrorMsg }}</p>
+                                <p class="text-[11px] mb-2" style="color:rgba(255,255,255,0.4);">{{ companyErrorMsg }}
+                                </p>
                                 <button class="text-[11px] underline underline-offset-2" style="color:#60a5fa;"
                                     @click.stop="resetCompanyUpload">
                                     Thử lại
@@ -490,7 +494,8 @@
 
                     <!-- Fit analysis - using AnalysisPanel component -->
                     <div ref="analysisPanelRef">
-                        <AnalysisPanel :cvReady="cvReady" :jdReady="jdReady" :cvFilePath="cvPath" :jdFilePath="jdPath" :companyFilePath="companyPath" />
+                        <AnalysisPanel :cvReady="cvReady" :jdReady="jdReady" :cvFilePath="cvPath" :jdFilePath="jdPath"
+                            :companyFilePath="companyPath" />
                     </div>
 
                     <!-- Action button -->
@@ -500,8 +505,10 @@
                             @mouseenter="$event.currentTarget.style.transform = 'translateY(-1px)'; $event.currentTarget.style.boxShadow = '0 8px 24px rgba(79,70,229,0.55)'"
                             @mouseleave="$event.currentTarget.style.transform = ''; $event.currentTarget.style.boxShadow = '0 4px 18px rgba(79,70,229,0.4)'">
                             Vào phòng phỏng vấn
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                stroke-width="2.2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
                             </svg>
                         </button>
                     </div>
@@ -532,37 +539,44 @@
                     </label>
 
                     <!-- Upload Status -->
-                    <div v-if="jobDescriptionUploadState === 'idle'" class="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center cursor-pointer hover:border-blue-400 transition-colors"
+                    <div v-if="jobDescriptionUploadState === 'idle'"
+                        class="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center cursor-pointer hover:border-blue-400 transition-colors"
                         @click="jdFileInputRef?.$el?.click?.() || $refs.jdFileInput?.click?.()">
-                        <svg class="w-8 h-8 mx-auto text-gray-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg class="w-8 h-8 mx-auto text-gray-500 mb-2" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                         </svg>
                         <p class="text-sm text-gray-400">Kéo thả file vào đây hoặc click để chọn</p>
                     </div>
 
-                    <div v-else-if="jobDescriptionUploadState === 'uploading'" class="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4 text-center">
+                    <div v-else-if="jobDescriptionUploadState === 'uploading'"
+                        class="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4 text-center">
                         <p class="text-sm text-white mb-2">{{ jobDescriptionFileName }}</p>
                         <p class="text-xs text-gray-400">Đang xử lý...</p>
                     </div>
 
-                    <div v-else-if="jobDescriptionUploadState === 'success'" class="bg-green-900/20 border border-green-500/30 rounded-lg p-4 text-center">
+                    <div v-else-if="jobDescriptionUploadState === 'success'"
+                        class="bg-green-900/20 border border-green-500/30 rounded-lg p-4 text-center">
                         <div class="flex justify-center mb-2">
                             <svg class="w-6 h-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
                             </svg>
                         </div>
                         <p class="text-sm text-white">{{ jobDescriptionFileName }}</p>
                         <button class="text-xs text-blue-400 mt-2 underline" @click="resetJdUpload">Tải lại</button>
                     </div>
 
-                    <div v-else-if="jobDescriptionUploadState === 'error'" class="bg-red-900/20 border border-red-500/30 rounded-lg p-4 text-center">
+                    <div v-else-if="jobDescriptionUploadState === 'error'"
+                        class="bg-red-900/20 border border-red-500/30 rounded-lg p-4 text-center">
                         <p class="text-sm text-red-400 mb-2">Lỗi: {{ jdErrorMsg }}</p>
                         <button class="text-xs text-blue-400 underline" @click="resetJdUpload">Thử lại</button>
                     </div>
 
                     <!-- Hidden file input -->
-                    <input ref="jdFileInputRef" type="file" accept=".docx,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="hidden"
-                        @change="onJdFileChange" />
+                    <input ref="jdFileInputRef" type="file"
+                        accept=".docx,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                        class="hidden" @change="onJdFileChange" />
                 </div>
 
             </div>
@@ -797,11 +811,11 @@ async function handleCvUpload(file) {
 
     try {
         // Ưu tiên localStorage vì token được lưu ở đó sau login
-        const token = localStorage.getItem('access_token') || 
-                     localStorage.getItem('token') || 
-                     authStore.token
+        const token = localStorage.getItem('access_token') ||
+            localStorage.getItem('token') ||
+            authStore.token
         const headers = {}
-        
+
         if (token) {
             headers.Authorization = `Bearer ${token}`
             console.log('🔐 CV Token found:', token.substring(0, 30) + '...')
@@ -925,7 +939,7 @@ const jdBadge = computed(() => {
             style: 'background:rgba(59,130,246,0.15); color:#60a5fa; border:1px solid rgba(59,130,246,0.25);'
         }
         case 'success': return {
-            text: '✓ HOÀN THÀNH',
+            text: '● HOÀN THÀNH',
             style: 'background:rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.25);'
         }
         case 'error': return {
@@ -1003,6 +1017,7 @@ function onJdCardClick() {
 }
 
 function onJdFileChange(e) {
+    jdInputMode.value = 'file'
     const file = e.target.files?.[0]
     console.log('🔍 onJdFileChange called, file:', file?.name)
     if (file) handleJdFileUploadRequest(file)
@@ -1018,7 +1033,7 @@ function onJdDrop(e) {
 async function handleJdFileUploadRequest(file) {
     console.log('▶️ handleJdFileUploadRequest started, file:', file?.name)
     if (!file) return
-    
+
     const fileNameLower = file.name.toLowerCase()
     console.log('📝 File name:', fileNameLower)
     if (!fileNameLower.endsWith('.docx') && !fileNameLower.endsWith('.pdf')) {
@@ -1038,11 +1053,11 @@ async function handleJdFileUploadRequest(file) {
 
     try {
         // Ưu tiên localStorage vì token được lưu ở đó sau login
-        const token = localStorage.getItem('access_token') || 
-                     localStorage.getItem('token') || 
-                     authStore.token
+        const token = localStorage.getItem('access_token') ||
+            localStorage.getItem('token') ||
+            authStore.token
         const headers = {}
-        
+
         if (token) {
             headers.Authorization = `Bearer ${token}`
             console.log('🔐 JD Token found:', token.substring(0, 30) + '...')
@@ -1058,7 +1073,7 @@ async function handleJdFileUploadRequest(file) {
 
         console.log('🌐 Uploading to:', buildApiUrl('/api/v1/job-description/upload'))
         console.log('📦 FormData contains:', file.name, 'size:', file.size, 'bytes')
-        
+
         const response = await axios.post(buildApiUrl('/api/v1/job-description/upload'), formData, {
             headers,
             onUploadProgress: (e) => {
@@ -1144,21 +1159,21 @@ function onCompanyCardClick() {
 
 function onCompanyFileChange(e) {
     const file = e.target.files?.[0]
-    console.log('🔍 onCompanyFileChange called, file:', file?.name)
+    console.log('onCompanyFileChange called, file:', file?.name)
     if (file) handleCompanyFileUploadRequest(file)
 }
 
 function onCompanyDrop(e) {
     e.preventDefault()
     const file = e.dataTransfer.files?.[0]
-    console.log('🔍 onCompanyDrop called, file:', file?.name)
+    console.log('onCompanyDrop called, file:', file?.name)
     if (file) handleCompanyFileUploadRequest(file)
 }
 
 async function handleCompanyFileUploadRequest(file) {
-    console.log('▶️ handleCompanyFileUploadRequest started, file:', file?.name)
+    console.log('handleCompanyFileUploadRequest started, file:', file?.name)
     if (!file) return
-    
+
     const fileNameLower = file.name.toLowerCase()
     if (!fileNameLower.endsWith('.docx') && !fileNameLower.endsWith('.pdf')) {
         companyUploadState.value = 'error'
@@ -1174,11 +1189,11 @@ async function handleCompanyFileUploadRequest(file) {
     formData.append('file', file)
 
     try {
-        const token = localStorage.getItem('access_token') || 
-                     localStorage.getItem('token') || 
-                     authStore.token
+        const token = localStorage.getItem('access_token') ||
+            localStorage.getItem('token') ||
+            authStore.token
         const headers = {}
-        
+
         if (token) {
             headers.Authorization = `Bearer ${token}`
             console.log('🔐 Company Token found')

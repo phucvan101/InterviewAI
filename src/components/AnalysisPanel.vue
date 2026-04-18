@@ -26,20 +26,19 @@
         <p class="text-[13px] mb-6" style="color:rgba(255,255,255,0.5);">
           Nhấn nút dưới để xem mức độ phù hợp của CV với công việc
         </p>
-        <button class="px-6 py-2.5 rounded-lg font-semibold transition-all"
-          :style="cvReady && jdReady ? {
-            background: 'linear-gradient(135deg,#fbbf24,#f59e0b)',
-            color: '#1a1a1a'
-          } : {
-            background: 'rgba(255,255,255,0.08)',
-            color: 'rgba(255,255,255,0.4)'
-          }"
-          :disabled="!cvReady || !jdReady"
-          @click="startAnalysis">
-          {{ cvReady && jdReady ? '🚀 Bắt đầu phân tích' : '⚠️ Tải CV và JD lên' }}
+        <button class="px-6 py-2.5 rounded-lg font-semibold transition-all" :style="cvReady && jdReady ? {
+          background: 'linear-gradient(135deg,#fbbf24,#f59e0b)',
+          color: '#1a1a1a'
+        } : {
+          background: 'rgba(255,255,255,0.08)',
+          color: 'rgba(255,255,255,0.4)'
+        }" :disabled="!cvReady || !jdReady" @click="startAnalysis">
+          {{ cvReady && jdReady ? 'Bắt đầu phân tích' : 'Tải CV và JD lên' }}
         </button>
         <p v-if="!cvReady || !jdReady" class="text-[11px] mt-3" style="color:#f87171;">
-          {{ !cvReady && !jdReady ? 'Hãy tải file CV và JD lên' : !cvReady ? 'Hãy tải file CV lên' : 'Hãy tải file JD lên' }}
+          {{
+            !cvReady && !jdReady ? 'Hãy tải file CV và JD lên' : !cvReady ? 'Hãy tải file CV lên' : 'Hãy tải file JD lên'
+          }}
         </p>
       </div>
 
@@ -49,8 +48,7 @@
           <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl"
             style="background:rgba(96,165,250,0.1); animation: spin 2s linear infinite;">
             <svg class="w-8 h-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M13 10V3L4 14h7v7l9-11h-7z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
         </div>
@@ -62,8 +60,7 @@
         <div class="w-full h-2 rounded-full overflow-hidden"
           style="background:rgba(255,255,255,0.08); max-width:300px; margin:0 auto;">
           <div class="h-full rounded-full transition-all duration-300"
-            style="background:linear-gradient(90deg,#4f46e5,#60a5fa);"
-            :style="{ width: analysisProgress + '%' }" />
+            style="background:linear-gradient(90deg,#4f46e5,#60a5fa);" :style="{ width: analysisProgress + '%' }" />
         </div>
         <p class="text-[12px] mt-3" style="color:rgba(255,255,255,0.4);">
           {{ Math.floor(analysisProgress) }}%
@@ -83,8 +80,7 @@
                 stroke-dasharray="471" stroke-dashoffset="471" :style="{
                   strokeDashoffset: 471 - (471 * (analysisData.overall_score / 100)),
                   transition: 'stroke-dashoffset 1.5s ease-out'
-                }"
-                stroke-linecap="round" />
+                }" stroke-linecap="round" />
               <defs>
                 <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" :style="{ 'stop-color': getScoreColor(analysisData.overall_score).start }" />
@@ -113,11 +109,9 @@
         <!-- Tabs for details -->
         <div class="flex gap-2 border-b" style="border-color:rgba(255,255,255,0.1);">
           <button v-for="tab in detailTabs" :key="tab.id"
-            class="px-4 py-2 text-sm font-semibold transition-colors relative"
-            :style="{
+            class="px-4 py-2 text-sm font-semibold transition-colors relative" :style="{
               color: activeDetailTab === tab.id ? '#60a5fa' : 'rgba(255,255,255,0.5)'
-            }"
-            @click="activeDetailTab = tab.id">
+            }" @click="activeDetailTab = tab.id">
             {{ tab.label }}
             <div v-if="activeDetailTab === tab.id" class="absolute bottom-0 left-0 right-0 h-0.5"
               style="background:linear-gradient(90deg,#60a5fa,#3b82f6);" />
@@ -126,7 +120,7 @@
 
         <!-- Tab content: Missing Skills -->
         <div v-if="activeDetailTab === 'missing'">
-          <h4 class="text-sm font-bold text-white mb-3">❌ Kỹ năng thiếu ({{ analysisData.missing_skills.length }})</h4>
+          <h4 class="text-sm font-bold text-white mb-3">Kỹ năng thiếu ({{ analysisData.missing_skills.length }})</h4>
           <div class="grid grid-cols-2 gap-2">
             <div v-for="(skill, idx) in analysisData.missing_skills" :key="`missing-${idx}`"
               class="px-3 py-2 rounded-lg text-[12px]"
@@ -138,7 +132,7 @@
 
         <!-- Tab content: Strengths -->
         <div v-else-if="activeDetailTab === 'strengths'">
-          <h4 class="text-sm font-bold text-white mb-3">💪 Điểm mạnh chính</h4>
+          <h4 class="text-sm font-bold text-white mb-3">Điểm mạnh chính</h4>
           <div class="space-y-2">
             <div v-for="(strength, idx) in analysisData.main_strengths" :key="`strength-${idx}`"
               class="px-4 py-3 rounded-lg"
@@ -152,13 +146,13 @@
 
         <!-- Tab content: Development -->
         <div v-else-if="activeDetailTab === 'development'">
-          <h4 class="text-sm font-bold text-white mb-3">📈 Khu vực cần phát triển</h4>
+          <h4 class="text-sm font-bold text-white mb-3">Khu vực cần phát triển</h4>
           <div class="space-y-2">
             <div v-for="(area, idx) in analysisData.areas_for_development" :key="`area-${idx}`"
               class="px-4 py-3 rounded-lg"
               style="background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.2);">
               <p class="text-[13px] leading-relaxed" style="color:#93c5fd;">
-                → {{ area }}
+                {{ area }}
               </p>
             </div>
           </div>
@@ -166,8 +160,9 @@
 
         <!-- Tab content: Recommendation -->
         <div v-else-if="activeDetailTab === 'recommendation'">
-          <h4 class="text-sm font-bold text-white mb-3">💡 Khuyến nghị</h4>
-          <div class="px-4 py-3 rounded-lg" style="background:rgba(168,85,247,0.1); border:1px solid rgba(168,85,247,0.2);">
+          <h4 class="text-sm font-bold text-white mb-3">Khuyến nghị</h4>
+          <div class="px-4 py-3 rounded-lg"
+            style="background:rgba(168,85,247,0.1); border:1px solid rgba(168,85,247,0.2);">
             <p class="text-[13px] leading-relaxed" style="color:#d8b4fe;">
               {{ analysisData.recommendation }}
             </p>
@@ -176,24 +171,36 @@
 
         <!-- Matched Skills Summary -->
         <div>
-          <h4 class="text-sm font-bold text-white mb-3">✅ Kỹ năng phù hợp ({{ analysisData.matched_skills.length }})</h4>
-          <div class="flex flex-wrap gap-2">
+          <h4 class="text-sm font-bold text-white mb-3">Kỹ năng phù hợp ({{ analysisData.matched_skills.length }})
+          </h4>
+          <div class="flex flex-wrap gap-2" v-if="!isMoreSkills">
             <span v-for="(skill, idx) in analysisData.matched_skills.slice(0, 8)" :key="`matched-${idx}`"
               class="px-3 py-1.5 rounded-full text-[11px] font-semibold"
               style="background:rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.25);">
               {{ skill }}
             </span>
             <span v-if="analysisData.matched_skills.length > 8"
+              class="px-3 py-1.5 rounded-full text-[11px] font-semibold cursor-pointer"
+              style="background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.5);" @click="isMoreSkills = true">
+              +{{ analysisData.matched_skills.length - 8 }} thêm
+            </span>
+          </div>
+          <div class="flex flex-wrap gap-2" v-else>
+            <span v-for="(skill, idx) in analysisData.matched_skills" :key="`matched-${idx}`"
               class="px-3 py-1.5 rounded-full text-[11px] font-semibold"
-              style="background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.5);">
-              +{{ analysisData.matched_skills.length - 8 }} more
+              style="background:rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.25);">
+              {{ skill }}
+            </span>
+            <span class="px-3 py-1.5 rounded-full text-[11px] font-semibold cursor-pointer"
+              style="background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.5);" @click="isMoreSkills = false">
+              - ẩn
             </span>
           </div>
         </div>
 
         <!-- Experience Assessment -->
         <div class="rounded-lg p-4" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08);">
-          <h4 class="text-sm font-bold text-white mb-2">🎯 Đánh giá kinh nghiệm</h4>
+          <h4 class="text-sm font-bold text-white mb-2">Đánh giá kinh nghiệm</h4>
           <p class="text-[13px] mb-2" style="color:rgba(255,255,255,0.7);">
             <span class="font-semibold">{{ analysisData.experience_assessment }}</span>
           </p>
@@ -205,8 +212,7 @@
         <!-- Reset button -->
         <div class="text-center pt-4">
           <button class="px-4 py-2 text-sm font-semibold rounded-lg transition-all"
-            style="background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.6);"
-            @click="resetAnalysis">
+            style="background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.6);" @click="resetAnalysis">
             ↻ Phân tích lại
           </button>
         </div>
@@ -250,15 +256,16 @@ const props = defineProps({
 // State
 const isAnalyzing = ref(false)
 const analysisCompleted = ref(false)
+const isMoreSkills = ref(false)
 const analysisData = ref(null)
 const activeDetailTab = ref('missing')
 const analysisProgress = ref(0)
 
 const detailTabs = [
-  { id: 'missing', label: '❌ Kỹ năng thiếu' },
-  { id: 'strengths', label: '💪 Điểm mạnh' },
-  { id: 'development', label: '📈 Phát triển' },
-  { id: 'recommendation', label: '💡 Khuyến nghị' }
+  { id: 'missing', label: 'Kỹ năng thiếu' },
+  { id: 'strengths', label: 'Điểm mạnh' },
+  { id: 'development', label: 'Phát triển' },
+  { id: 'recommendation', label: 'Khuyến nghị' }
 ]
 
 // Compute API URL

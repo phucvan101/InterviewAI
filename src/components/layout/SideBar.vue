@@ -46,10 +46,12 @@
 
         <!-- User -->
         <div class="flex items-center gap-3 px-4 py-4 border-t" style="border-color:rgba(255,255,255,0.06);">
-            <img :src="`https://i.pravatar.cc/40?u=${auth.user?.email || 'default'}`" class="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+            <img :src="`https://i.pravatar.cc/40?u=${auth.user?.email || 'default'}`"
+                class="w-8 h-8 rounded-full object-cover flex-shrink-0" />
             <div class="flex-1 min-w-0">
                 <div class="text-[12.5px] font-semibold text-white truncate">{{ auth.userName }}</div>
-                <div class="text-[10.5px] truncate" style="color:rgba(255,255,255,0.38);">{{ auth.user?.email || 'Khách' }}</div>
+                <div class="text-[10.5px] truncate" style="color:rgba(255,255,255,0.38);">{{ auth.user?.email || 'Khách'
+                }}</div>
             </div>
             <button @click="handleLogout"
                 class="w-7 h-7 flex items-center justify-center rounded-lg transition-colors hover:bg-white/10"
@@ -101,6 +103,7 @@ const recentSessions = [
 
 // Auth store
 const auth = useAuthStore();
+console.log('user', auth.user);
 const handleLogout = () => {
     auth.logout()
     router.push('/')
