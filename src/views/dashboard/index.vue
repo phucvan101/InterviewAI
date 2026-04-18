@@ -166,7 +166,272 @@
                             </div>
                         </div>
 
-                        <!-- ═══ Card thường (JD, Company) ═══ -->
+                        <!-- ═══ Card JD: có logic upload ═══ -->
+                        <div v-else-if="doc.id === 'job-description'"
+                            class="relative rounded-2xl border p-5 cursor-pointer transition-all duration-200"
+                            :style="getJdDocStyle()" @click="jdInputMode === 'file' ? onJdCardClick() : null"
+                            @dragover.prevent @drop="jdInputMode === 'file' ? onJdDrop($event) : null">
+
+                            <!-- Hidden file input -->
+                            <input ref="jdFileInputRef" type="file"
+                                accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                class="hidden" @change="onJdFileChange" />
+
+                            <!-- Step badge -->
+                            <div class="absolute top-4 left-4 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold"
+                                style="background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.5);">
+                                {{ idx + 1 }}
+                            </div>
+
+                            <!-- Status badge (Dynamic) -->
+                            <div class="absolute top-4 right-4">
+                                <span
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10.5px] font-bold"
+                                    :style="jdBadgeStyle">
+                                    {{ jdBadgeText }}
+                                </span>
+                            </div>
+
+                            <!-- Icon -->
+                            <div class="flex justify-center mt-4 mb-4">
+                                <div class="w-14 h-14 rounded-2xl flex items-center justify-center"
+                                    :style="{ background: doc.iconBg }">
+                                    <span v-html="doc.icon" style="width:26px;height:26px;" />
+                                </div>
+                            </div>
+
+                            <!-- State: IDLE -->
+                            <div v-if="jobDescriptionUploadState === 'idle'" class="text-center">
+                                <h3 class="text-sm font-bold text-white mb-1.5">{{ doc.title }}</h3>
+                                <div class="flex items-center justify-center gap-2 mb-3">
+                                    <button class="px-2.5 py-1 rounded text-[11px] border"
+                                        :style="jdInputMode === 'file'
+                                            ? 'background:rgba(59,130,246,0.2); border-color:rgba(59,130,246,0.35); color:#93c5fd;'
+                                            : 'background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.12); color:rgba(255,255,255,0.65);'"
+                                        @click="onJdFileChange">
+                                        Upload file
+                                    </button>
+                                    <button class="px-2.5 py-1 rounded text-[11px] border"
+                                        :style="jdInputMode === 'text'
+                                            ? 'background:rgba(59,130,246,0.2); border-color:rgba(59,130,246,0.35); color:#93c5fd;'
+                                            : 'background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.12); color:rgba(255,255,255,0.65);'"
+                                        @click.stop="jdInputMode = 'text'">
+                                        Dán text
+                                    </button>
+                                </div>
+                                <p v-if="jdInputMode === 'file'" class="text-[11.5px] leading-relaxed"
+                                    style="color:rgba(255,255,255,0.42);">
+                                    Kéo thả hoặc nhấp để chọn file DOCX/PDF
+                                </p>
+                                <div v-else class="space-y-2">
+                                    <textarea v-model="jobDescriptionText" rows="4"
+                                        class="w-full rounded-lg p-2 text-[12px] bg-[#0f1326] border border-white/10 text-white outline-none resize-none"
+                                        placeholder="Dán nội dung JD tại đây..." @click.stop />
+                                    <button
+                                        class="w-full px-3 py-2 rounded-lg text-[12px] font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                                        style="background:linear-gradient(90deg,#3b82f6,#2563eb); color:white;"
+                                        :disabled="!jobDescriptionText.trim() || jobDescriptionUploadState === 'uploading'"
+                                        @click.stop="handleJdTextUploadRequest">
+                                        Xong
+                                    </button>
+                                </div>
+                                <p v-if="jdInputMode === 'text'" class="text-[11px] mt-1"
+                                    style="color:rgba(255,255,255,0.42);">
+                                    Nhấn "Xong" để gửi nội dung JD về BE
+                                </p>
+                            </div>
+
+                            <!-- State: UPLOADING -->
+                            <div v-else-if="jobDescriptionUploadState === 'uploading'" class="text-center">
+                                <h3 class="text-sm font-bold text-white mb-1">{{ jobDescriptionFileName }}</h3>
+                                <p class="text-[11px] mb-3" style="color:rgba(255,255,255,0.4);">
+                                    Đang tải lên... {{ jobDescriptionUploadProgress }}%
+                                </p>
+                                <!-- Progress bar -->
+                                <div class="w-full h-1.5 rounded-full overflow-hidden"
+                                    style="background:rgba(255,255,255,0.08);">
+                                    <div class="h-full rounded-full transition-all duration-300"
+                                        style="background:linear-gradient(90deg,#4f46e5,#60a5fa);"
+                                        :style="{ width: jobDescriptionUploadProgress + '%' }" />
+                                </div>
+                            </div>
+
+                            <!-- State: SUCCESS -->
+                            <div v-else-if="jobDescriptionUploadState === 'success'" class="text-center">
+                                <div class="flex justify-center mb-2">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center"
+                                        style="background:rgba(34,197,94,0.2);">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="#4ade80"
+                                            stroke-width="2.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="m4.5 12.75 6 6 9-13.5" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <h3 class="text-sm font-bold text-white mb-1 truncate px-2">{{ jobDescriptionFileName }}
+                                </h3>
+                                <button class="text-[11px] mt-1 underline underline-offset-2"
+                                    style="color:rgba(255,255,255,0.35);" @click.stop="resetJdUpload">
+                                    Tải lại
+                                </button>
+                            </div>
+
+                            <!-- State: ERROR -->
+                            <div v-else-if="jobDescriptionUploadState === 'error'" class="text-center">
+                                <h3 class="text-sm font-bold mb-1" style="color:#f87171;">Tải lên thất bại</h3>
+                                <p class="text-[11px] mb-2" style="color:rgba(255,255,255,0.4);">{{ jdErrorMsg }}</p>
+                                <button class="text-[11px] underline underline-offset-2" style="color:#60a5fa;"
+                                    @click.stop="resetJdUpload">
+                                    Thử lại
+                                </button>
+                            </div>
+
+                            <!-- Arrow connector -->
+                            <div v-if="idx < documents.length - 1"
+                                class="absolute -right-3.5 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center w-7 h-7 rounded-full"
+                                style="background:#1a1e35; border:1px solid rgba(255,255,255,0.08);">
+                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="rgba(255,255,255,0.3)"
+                                    stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <!-- ═══ Card Company Research: có logic upload ═══ -->
+                        <div v-else-if="doc.id === 'company-research'"
+                            class="relative rounded-2xl border p-5 cursor-pointer transition-all duration-200"
+                            :style="getCompanyDocStyle()"
+                            @click="companyInputMode === 'file' ? onCompanyCardClick() : null" @dragover.prevent
+                            @drop="companyInputMode === 'file' ? onCompanyDrop($event) : null">
+
+                            <!-- Hidden file input -->
+                            <input ref="companyFileInputRef" type="file"
+                                accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
+                                class="hidden" @change="onCompanyFileChange" />
+
+                            <!-- Step badge -->
+                            <div class="absolute top-4 left-4 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold"
+                                style="background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.5);">
+                                {{ idx + 1 }}
+                            </div>
+
+                            <!-- Status badge -->
+                            <div class="absolute top-4 right-4">
+                                <span
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10.5px] font-bold"
+                                    :style="companyBadge.style">
+                                    {{ companyBadge.text }}
+                                </span>
+                            </div>
+
+                            <!-- Icon -->
+                            <div class="flex justify-center mt-4 mb-4">
+                                <div class="w-14 h-14 rounded-2xl flex items-center justify-center"
+                                    :style="{ background: doc.iconBg }">
+                                    <span v-html="doc.icon" style="width:26px;height:26px;" />
+                                </div>
+                            </div>
+
+                            <!-- State: IDLE -->
+                            <div v-if="companyUploadState === 'idle'" class="text-center">
+                                <h3 class="text-sm font-bold text-white mb-1.5">{{ doc.title }}</h3>
+                                <div class="flex items-center justify-center gap-2 mb-3">
+                                    <button class="px-2.5 py-1 rounded text-[11px] border"
+                                        :style="companyInputMode === 'file'
+                                            ? 'background:rgba(168,85,247,0.2); border-color:rgba(168,85,247,0.35); color:#d8b4fe;'
+                                            : 'background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.12); color:rgba(255,255,255,0.65);'"
+                                        @click.stop="companyInputMode = 'file'">
+                                        Upload file
+                                    </button>
+                                    <button class="px-2.5 py-1 rounded text-[11px] border"
+                                        :style="companyInputMode === 'text'
+                                            ? 'background:rgba(168,85,247,0.2); border-color:rgba(168,85,247,0.35); color:#d8b4fe;'
+                                            : 'background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.12); color:rgba(255,255,255,0.65);'"
+                                        @click.stop="companyInputMode = 'text'">
+                                        Dán text
+                                    </button>
+                                </div>
+                                <p v-if="companyInputMode === 'file'" class="text-[11.5px] leading-relaxed"
+                                    style="color:rgba(255,255,255,0.42);">
+                                    Kéo thả hoặc nhấp để chọn file DOCX/PDF
+                                </p>
+                                <div v-else class="space-y-2">
+                                    <textarea v-model="companyResearchText" rows="4"
+                                        class="w-full rounded-lg p-2 text-[12px] bg-[#0f1326] border border-white/10 text-white outline-none resize-none"
+                                        placeholder="Dán nội dung nghiên cứu công ty..." @click.stop />
+                                    <button
+                                        class="w-full px-3 py-2 rounded-lg text-[12px] font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                                        style="background:linear-gradient(90deg,#a855f7,#9333ea); color:white;"
+                                        :disabled="!companyResearchText.trim() || companyUploadState === 'uploading'"
+                                        @click.stop="handleCompanyTextUploadRequest">
+                                        Xong
+                                    </button>
+                                </div>
+                                <p v-if="companyInputMode === 'text'" class="text-[11px] mt-1"
+                                    style="color:rgba(255,255,255,0.42);">
+                                    Nhấn "Xong" để gửi nội dung Company Research về BE
+                                </p>
+                            </div>
+
+                            <!-- State: UPLOADING -->
+                            <div v-else-if="companyUploadState === 'uploading'" class="text-center">
+                                <h3 class="text-sm font-bold text-white mb-1">{{ companyFileName }}</h3>
+                                <p class="text-[11px] mb-3" style="color:rgba(255,255,255,0.4);">
+                                    Đang tải lên... {{ companyUploadProgress }}%
+                                </p>
+                                <!-- Progress bar -->
+                                <div class="w-full h-1.5 rounded-full overflow-hidden"
+                                    style="background:rgba(255,255,255,0.08);">
+                                    <div class="h-full rounded-full transition-all duration-300"
+                                        style="background:linear-gradient(90deg,#a855f7,#d946ef);"
+                                        :style="{ width: companyUploadProgress + '%' }" />
+                                </div>
+                            </div>
+
+                            <!-- State: SUCCESS -->
+                            <div v-else-if="companyUploadState === 'success'" class="text-center">
+                                <div class="flex justify-center mb-2">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center"
+                                        style="background:rgba(34,197,94,0.2);">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="#4ade80"
+                                            stroke-width="2.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="m4.5 12.75 6 6 9-13.5" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <h3 class="text-sm font-bold text-white mb-1 truncate px-2">{{ companyFileName }}</h3>
+                                <button class="text-[11px] mt-1 underline underline-offset-2"
+                                    style="color:rgba(255,255,255,0.35);" @click.stop="resetCompanyUpload">
+                                    Tải lại
+                                </button>
+                            </div>
+
+                            <!-- State: ERROR -->
+                            <div v-else-if="companyUploadState === 'error'" class="text-center">
+                                <h3 class="text-sm font-bold mb-1" style="color:#f87171;">Tải lên thất bại</h3>
+                                <p class="text-[11px] mb-2" style="color:rgba(255,255,255,0.4);">{{ companyErrorMsg }}
+                                </p>
+                                <button class="text-[11px] underline underline-offset-2" style="color:#60a5fa;"
+                                    @click.stop="resetCompanyUpload">
+                                    Thử lại
+                                </button>
+                            </div>
+
+                            <!-- Arrow connector -->
+                            <div v-if="idx < documents.length - 1"
+                                class="absolute -right-3.5 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center w-7 h-7 rounded-full"
+                                style="background:#1a1e35; border:1px solid rgba(255,255,255,0.08);">
+                                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="rgba(255,255,255,0.3)"
+                                    stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <!-- ═══ Card thường (fallback) ═══ -->
                         <div v-else
                             class="relative rounded-2xl border p-5 cursor-pointer transition-all duration-200 group"
                             :style="getDocStyle(doc)" @mouseenter="hoveredDoc = idx" @mouseleave="hoveredDoc = null">
@@ -225,154 +490,31 @@
                 </div>
 
                 <!-- ── Bottom panels ── -->
-                <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-6">
 
-                    <!-- Fit analysis -->
-                    <div class="rounded-2xl border p-6"
-                        style="background:#141728; border-color:rgba(255,255,255,0.07);">
-                        <div class="flex items-start justify-between mb-1">
-                            <h3 class="text-base font-black text-white leading-snug">Phân tích độ phù hợp</h3>
-                            <button
-                                class="w-7 h-7 flex items-center justify-center rounded-full transition-colors hover:bg-white/10"
-                                style="color:rgba(255,255,255,0.35); margin-top:2px;">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                    stroke-width="1.8">
-                                    <circle cx="12" cy="12" r="9" />
-                                    <path stroke-linecap="round" d="M12 8v1m0 3v4" />
-                                </svg>
-                            </button>
-                        </div>
-                        <p class="text-[12px] mb-6 leading-relaxed" style="color:rgba(255,255,255,0.38);">
-                            Phân tích dựa trên tài liệu đã tải lên so với mô tả công việc.
-                        </p>
-
-                        <!-- Circular progress -->
-                        <div class="flex justify-center">
-                            <div class="relative w-36 h-36">
-                                <svg class="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                                    <!-- Track -->
-                                    <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.07)"
-                                        stroke-width="8" />
-                                    <!-- Progress -->
-                                    <circle cx="50" cy="50" r="40" fill="none" stroke="url(#progressGrad)"
-                                        stroke-width="8" stroke-linecap="round"
-                                        :stroke-dasharray="`${fitPercent * 2.51} 251`"
-                                        style="transition: stroke-dasharray 1s ease;" />
-                                    <defs>
-                                        <linearGradient id="progressGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                                            <stop offset="0%" stop-color="#4f46e5" />
-                                            <stop offset="100%" stop-color="#a855f7" />
-                                        </linearGradient>
-                                    </defs>
-                                </svg>
-                                <div class="absolute inset-0 flex flex-col items-center justify-center">
-                                    <span class="text-3xl font-black text-white">{{ fitPercent }}%</span>
-                                </div>
-                            </div>
-                        </div>
+                    <!-- Fit analysis - using AnalysisPanel component -->
+                    <div ref="analysisPanelRef">
+                        <AnalysisPanel :cvReady="cvReady" :jdReady="jdReady" :cvFilePath="cvPath" :jdFilePath="jdPath"
+                            :companyFilePath="companyPath" />
                     </div>
 
-                    <!-- CV content analysis -->
-                    <div class="rounded-2xl border overflow-hidden"
-                        style="background:#141728; border-color:rgba(255,255,255,0.07);">
-                        <!-- Tab bar -->
-                        <div class="flex items-center justify-between px-5 pt-5 pb-4 border-b"
-                            style="border-color:rgba(255,255,255,0.06);">
-                            <h3 class="text-base font-black text-white">Phân tích nội dung CV</h3>
-                            <div class="flex items-center gap-1">
-                                <button class="px-2.5 py-1 text-[11px] font-medium rounded-full transition-colors"
-                                    style="background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.4);"
-                                    @mouseenter="$event.currentTarget.style.background = 'rgba(255,255,255,0.1)'"
-                                    @mouseleave="$event.currentTarget.style.background = 'rgba(255,255,255,0.06)'">XEM
-                                    TRƯỚC</button>
-                            </div>
-                        </div>
-
-                        <!-- Tabs -->
-                        <div class="flex gap-1.5 px-5 pt-3 pb-2">
-                            <button v-for="tab in cvTabs" :key="tab"
-                                class="px-3 py-1.5 text-[12px] font-semibold rounded-full transition-all duration-150"
-                                :style="activeTab === tab
-                                    ? 'background:rgba(255,255,255,0.12); color:#fff;'
-                                    : 'color:rgba(255,255,255,0.4);'" @click="activeTab = tab">{{ tab }}</button>
-                        </div>
-
-                        <!-- Two-col content -->
-                        <div class="grid grid-cols-2 gap-3 px-5 pb-5">
-                            <!-- Current -->
-                            <div class="rounded-xl p-3.5"
-                                style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06);">
-                                <div class="flex items-center gap-1.5 mb-2.5">
-                                    <svg class="w-3.5 h-3.5" style="color:rgba(255,255,255,0.3);" fill="none"
-                                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-                                    </svg>
-                                    <span class="text-[10px] font-bold uppercase tracking-wider"
-                                        style="color:rgba(255,255,255,0.3);">Nội dung hiện tại</span>
-                                </div>
-                                <p class="text-[11.5px] leading-relaxed" style="color:rgba(255,255,255,0.55);">
-                                    Quản lý sản phẩm với 5 năm kinh nghiệm. Quản lý một nhóm thiết kế và lập trình viên
-                                    để ra mắt ứng
-                                    dụng di động.
-                                </p>
-                                <p class="text-[11.5px] leading-relaxed mt-2" style="color:rgba(255,255,255,0.55);">
-                                    Chịu trách nhiệm lập lộ trình và quản lý backlog.
-                                </p>
-                            </div>
-
-                            <!-- AI suggestion -->
-                            <div class="rounded-xl p-3.5"
-                                style="background:rgba(109,67,245,0.08); border:1px solid rgba(109,67,245,0.18);">
-                                <div class="flex items-center gap-1.5 mb-2.5">
-                                    <svg class="w-3.5 h-3.5 text-[#a78bfa]" fill="none" viewBox="0 0 24 24"
-                                        stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
-                                    </svg>
-                                    <span class="text-[10px] font-bold uppercase tracking-wider text-[#a78bfa]">Gợi ý từ
-                                        AI</span>
-                                </div>
-                                <p class="text-[11.5px] leading-relaxed" style="color:rgba(255,255,255,0.65);">
-                                    Quản lý sản phẩm cấp cao với 5 năm kinh nghiệm thúc đẩy vòng đời sản phẩm.
-                                </p>
-                                <p class="text-[11.5px] leading-relaxed mt-2" style="color:rgba(255,255,255,0.65);">
-                                    Dẫn dắt một nhóm đa chức năng gồm 12 người để ra mắt thành công ứng dụng chủ lực.
-                                </p>
-                            </div>
-                        </div>
+                    <!-- Action button -->
+                    <div class="flex justify-end pt-2">
+                        <button
+                            class="flex items-center gap-2.5 px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-200 btn-common"
+                            @mouseenter="$event.currentTarget.style.transform = 'translateY(-1px)'; $event.currentTarget.style.boxShadow = '0 8px 24px rgba(79,70,229,0.55)'"
+                            @mouseleave="$event.currentTarget.style.transform = ''; $event.currentTarget.style.boxShadow = '0 4px 18px rgba(79,70,229,0.4)'">
+                            Vào phòng phỏng vấn
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                stroke-width="2.2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
-
             </div><!-- end scrollable -->
-
-            <!-- ── Bottom CTA bar ── -->
-            <div class="flex items-center justify-between px-8 py-4 border-t flex-shrink-0"
-                style="background:#0f1225; border-color:rgba(255,255,255,0.06);">
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl flex items-center justify-center"
-                        style="background:rgba(79,70,229,0.2);">
-                        <img src="@/assets/icon/dashboard/rocket.svg" alt="" />
-                    </div>
-                    <div>
-                        <div class="text-sm font-bold text-white">Sẵn sàng khởi động?</div>
-                        <div class="text-[11.5px]" style="color:rgba(255,255,255,0.4);">Hoàn thành các bước trên để bắt
-                            đầu mô
-                            phỏng.</div>
-                    </div>
-                </div>
-
-                <button
-                    class="flex items-center gap-2.5 px-6 py-3 rounded-xl text-sm font-bold text-white transition-all duration-200 btn-common"
-                    @mouseenter="$event.currentTarget.style.transform = 'translateY(-1px)'; $event.currentTarget.style.boxShadow = '0 8px 24px rgba(79,70,229,0.55)'"
-                    @mouseleave="$event.currentTarget.style.transform = ''; $event.currentTarget.style.boxShadow = '0 4px 18px rgba(79,70,229,0.4)'">
-                    Vào phòng phỏng vấn
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-                    </svg>
-                </button>
-            </div>
-        </div>
+        </div><!-- end main container -->
 
         <!--- Job Description Dialog --->
         <el-dialog title="Mô tả công việc" v-model="showJobDescriptionDialog" width="600px" class="custom-dialog">
@@ -393,18 +535,48 @@
                 <!-- UPLOAD FILE -->
                 <div>
                     <label class="block text-sm font-semibold mb-1">
-                        Tải file (PDF, DOC, DOCX)
+                        Tải file (DOCX, PDF)
                     </label>
 
-                    <el-upload class="w-full" drag action="#" :auto-upload="false" :on-change="handleFileChange">
-                        <div class="text-center">
-                            <p class="text-sm">Kéo thả file vào đây hoặc click để upload</p>
-                        </div>
-                    </el-upload>
+                    <!-- Upload Status -->
+                    <div v-if="jobDescriptionUploadState === 'idle'"
+                        class="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center cursor-pointer hover:border-blue-400 transition-colors"
+                        @click="jdFileInputRef?.$el?.click?.() || $refs.jdFileInput?.click?.()">
+                        <svg class="w-8 h-8 mx-auto text-gray-500 mb-2" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <p class="text-sm text-gray-400">Kéo thả file vào đây hoặc click để chọn</p>
+                    </div>
 
-                    <p v-if="fileName" class="text-xs mt-1 text-gray-500">
-                        File đã chọn: {{ fileName }}
-                    </p>
+                    <div v-else-if="jobDescriptionUploadState === 'uploading'"
+                        class="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4 text-center">
+                        <p class="text-sm text-white mb-2">{{ jobDescriptionFileName }}</p>
+                        <p class="text-xs text-gray-400">Đang xử lý...</p>
+                    </div>
+
+                    <div v-else-if="jobDescriptionUploadState === 'success'"
+                        class="bg-green-900/20 border border-green-500/30 rounded-lg p-4 text-center">
+                        <div class="flex justify-center mb-2">
+                            <svg class="w-6 h-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <p class="text-sm text-white">{{ jobDescriptionFileName }}</p>
+                        <button class="text-xs text-blue-400 mt-2 underline" @click="resetJdUpload">Tải lại</button>
+                    </div>
+
+                    <div v-else-if="jobDescriptionUploadState === 'error'"
+                        class="bg-red-900/20 border border-red-500/30 rounded-lg p-4 text-center">
+                        <p class="text-sm text-red-400 mb-2">Lỗi: {{ jdErrorMsg }}</p>
+                        <button class="text-xs text-blue-400 underline" @click="resetJdUpload">Thử lại</button>
+                    </div>
+
+                    <!-- Hidden file input -->
+                    <input ref="jdFileInputRef" type="file"
+                        accept=".docx,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                        class="hidden" @change="onJdFileChange" />
                 </div>
 
             </div>
@@ -416,72 +588,27 @@
                         Hủy
                     </el-button>
 
-                    <el-button class="btn-primary" style="border-radius: 5px;" @click="handleSubmit">
+                    <el-button class="btn-primary" style="border-radius: 5px;" @click="handleSubmit"
+                        :disabled="!jobDescriptionText.trim()">
                         Xác nhận
                     </el-button>
                 </div>
             </template>
         </el-dialog>
 
-        <el-dialog title="Nghiên cứu công ty" v-model="showCompanyResearchDialog" width="600px" class="custom-dialog">
-            <div class="space-y-4">
 
-                <!-- TEXT INPUT -->
-                <!-- <div>
-                    <label class="block text-sm font-semibold mb-1">
-                        Dán mô tả công việc
-                    </label>
-                    <el-input v-model="jobDescriptionText" type="textarea" :rows="6"
-                        placeholder="Dán nội dung mô tả công việc..." class="w-full" />
-                </div> -->
-
-                <!-- OR -->
-                <!-- <div class="text-center text-xs text-gray-400">HOẶC</div> -->
-
-                <!-- UPLOAD FILE -->
-                <div>
-                    <label class="block text-sm font-semibold mb-1">
-                        Tải file (PDF, DOC, DOCX)
-                    </label>
-
-                    <el-upload class="w-full" drag action="#" :auto-upload="false" :on-change="handleFileChange">
-                        <div class="text-center">
-                            <p class="text-sm">Kéo thả file vào đây hoặc click để upload</p>
-                        </div>
-                    </el-upload>
-
-                    <p v-if="fileName" class="text-xs mt-1 text-gray-500">
-                        File đã chọn: {{ fileName }}
-                    </p>
-                </div>
-
-            </div>
-
-            <!-- FOOTER -->
-            <template #footer>
-                <div class="flex justify-end gap-2">
-                    <el-button @click="showCompanyResearchDialog = false">
-                        Hủy
-                    </el-button>
-
-                    <el-button class="btn-primary" style="border-radius: 5px;" @click="handleSubmit">
-                        Xác nhận
-                    </el-button>
-                </div>
-            </template>
-        </el-dialog>
     </LayoutInterview>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import LayoutInterview from '../layouts/LayoutInterview.vue'
+import AnalysisPanel from '@/components/AnalysisPanel.vue'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const showJobDescriptionDialog = ref(false);
-const showCompanyResearchDialog = ref(false);
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '')
 const authStore = useAuthStore()
@@ -593,7 +720,6 @@ const documents = [
         completed: false,
         iconBg: 'rgba(59,130,246,0.18)',
         icon: `<svg fill="none" viewBox="0 0 24 24" stroke="#60a5fa" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>`,
-        badge: { text: '💬 ĐANG CHỜ', style: 'background:rgba(234,179,8,0.15); color:#fbbf24; border:1px solid rgba(234,179,8,0.25);', dot: false },
     },
 
     {
@@ -619,6 +745,36 @@ const cvUploadProgress = ref(0)
 const cvFileName = ref('')
 const cvErrorMsg = ref('')
 const cvFileInputRef = ref(null)
+
+// ── Job Description Upload ─────────────────────────────────────────────────────
+const jobDescriptionText = ref('')
+const jdInputMode = ref('file')
+const jobDescriptionFileName = ref('')
+const jobDescriptionUploadState = ref('idle')
+const jobDescriptionUploadProgress = ref(0)
+const jdErrorMsg = ref('')
+const jdFileInputRef = ref(null)
+const fileName = ref('')  // for compatibility
+
+// ── File paths for analysis ───────────────────────────────────────────────────
+const cvPath = ref(null)
+const jdPath = ref(null)
+const companyPath = ref(null)  // Optional company research path
+const cvData = ref(null)
+const jdData = ref(null)
+
+// ── Company Research Upload ─────────────────────────────────────────────────
+const companyFileName = ref('')
+const companyInputMode = ref('file')
+const companyResearchText = ref('')
+const companyUploadState = ref('idle')
+const companyUploadProgress = ref(0)
+const companyErrorMsg = ref('')
+const companyFileInputRef = ref(null)
+
+// ── Computed: Check if CV & JD are ready ───────────────────────────────────
+const cvReady = computed(() => cvUploadState.value === 'success')
+const jdReady = computed(() => jobDescriptionUploadState.value === 'success')
 
 function onCvCardClick() {
     const el = cvFileInputRef.value
@@ -654,11 +810,29 @@ async function handleCvUpload(file) {
     formData.append('file', file)
 
     try {
-        const token = authStore.token || localStorage.getItem('access_token') || localStorage.getItem('token')
-        const headers = { 'Content-Type': 'multipart/form-data' }
-        if (token) headers.Authorization = `Bearer ${token}`
+        // Ưu tiên localStorage vì token được lưu ở đó sau login
+        const token = localStorage.getItem('access_token') ||
+            localStorage.getItem('token') ||
+            authStore.token
+        const headers = {}
 
-        await axios.post(buildApiUrl('/api/v1/cv-profiles/upload'), formData, {
+        if (token) {
+            headers.Authorization = `Bearer ${token}`
+            console.log('🔐 CV Token found:', token.substring(0, 30) + '...')
+        } else {
+            console.error('❌ CV: NO TOKEN FOUND!')
+            console.log('   - localStorage access_token:', localStorage.getItem('access_token'))
+            console.log('   - localStorage token:', localStorage.getItem('token'))
+            console.log('   - authStore.token:', authStore.token)
+            cvUploadState.value = 'error'
+            cvErrorMsg.value = 'Chưa đăng nhập. Vui lòng đăng nhập lại.'
+            return
+        }
+
+        console.log('🌐 CV Uploading to:', buildApiUrl('/api/v1/cv-profiles/upload'))
+        console.log('📦 CV FormData size:', file.size, 'bytes')
+
+        const response = await axios.post(buildApiUrl('/api/v1/cv-profiles/upload'), formData, {
             headers,
             onUploadProgress: (e) => {
                 cvUploadProgress.value = Math.round((e.loaded / e.total) * 100)
@@ -666,10 +840,15 @@ async function handleCvUpload(file) {
         })
 
         cvUploadProgress.value = 100
+        // Lưu file_path trả về từ server
+        cvPath.value = response.data.file_path
+        cvFileName.value = response.data.file_name
         cvUploadState.value = 'success'
+        console.log('✅ CV uploaded successfully:', response.data)
     } catch (err) {
         cvUploadState.value = 'error'
         cvErrorMsg.value = err.response?.data?.message || 'Có lỗi xảy ra, vui lòng thử lại'
+        console.error('❌ CV upload error:', err)
     }
 }
 
@@ -689,6 +868,7 @@ function retryCvUpload() {
     cvUploadProgress.value = 0
     cvFileName.value = ''
     cvErrorMsg.value = ''
+    cvPath.value = null
     if (cvFileInputRef.value) cvFileInputRef.value.value = ''
 }
 
@@ -730,14 +910,388 @@ function getDocStyle(doc) {
 }
 
 function onDocClick(doc) {
-    if (doc.id === 'job-description') {
-        showJobDescriptionDialog.value = true
+    // Now company research is handled by the card upload, no modal needed
+}
+
+async function handleJdTextSubmit() {
+    await handleJdTextUploadRequest()
+}
+
+async function handleSubmit() {
+    await handleJdTextSubmit()
+}
+
+function resetJdUpload() {
+    jobDescriptionUploadState.value = 'idle'
+    jobDescriptionUploadProgress.value = 0
+    jobDescriptionFileName.value = ''
+    jdErrorMsg.value = ''
+    jdPath.value = null
+    jdInputMode.value = 'file'
+    jobDescriptionText.value = ''
+    if (jdFileInputRef.value) jdFileInputRef.value.value = ''
+}
+
+const jdBadge = computed(() => {
+    switch (jobDescriptionUploadState.value) {
+        case 'uploading': return {
+            text: '⏳ ĐANG TẢI',
+            style: 'background:rgba(59,130,246,0.15); color:#60a5fa; border:1px solid rgba(59,130,246,0.25);'
+        }
+        case 'success': return {
+            text: '● HOÀN THÀNH',
+            style: 'background:rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.25);'
+        }
+        case 'error': return {
+            text: '✕ LỖI',
+            style: 'background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.25);'
+        }
+        default: return {
+            text: '↑ CHƯA TẢI',
+            style: 'background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.45); border:1px solid rgba(255,255,255,0.1);'
+        }
     }
-    if (doc.id === 'company-research') {
-        showCompanyResearchDialog.value = true
+})
+
+const jdBadgeText = computed(() => jdBadge.value.text)
+const jdBadgeStyle = computed(() => jdBadge.value.style)
+
+const jdCardBorderColor = computed(() => ({
+    idle: 'rgba(255,255,255,0.07)',
+    uploading: 'rgba(59,130,246,0.35)',
+    success: 'rgba(34,197,94,0.25)',
+    error: 'rgba(239,68,68,0.3)',
+}[jobDescriptionUploadState.value]))
+
+function getJdDocStyle() {
+    return `background:#141728; border-color:${jdCardBorderColor.value};`
+}
+
+// ── Company Badge & Border Color ─────────────────────────────────────────────
+const companyBadge = computed(() => {
+    switch (companyUploadState.value) {
+        case 'uploading': return {
+            text: '⏳ ĐANG TẢI',
+            style: 'background:rgba(168,85,247,0.15); color:#d946ef; border:1px solid rgba(168,85,247,0.25);'
+        }
+        case 'success': return {
+            text: '✓ HOÀN THÀNH',
+            style: 'background:rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.25);'
+        }
+        case 'error': return {
+            text: '✕ LỖI',
+            style: 'background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.25);'
+        }
+        default: return {
+            text: '↑ TÙY CHỌN',
+            style: 'background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.45); border:1px solid rgba(255,255,255,0.1);'
+        }
+    }
+})
+
+const companyCardBorderColor = computed(() => ({
+    idle: 'rgba(255,255,255,0.07)',
+    uploading: 'rgba(168,85,247,0.35)',
+    success: 'rgba(34,197,94,0.25)',
+    error: 'rgba(239,68,68,0.3)',
+}[companyUploadState.value]))
+
+function getCompanyDocStyle() {
+    return `background:#141728; border-color:${companyCardBorderColor.value};`
+}
+
+function onJdCardClick() {
+    const el = jdFileInputRef.value
+    if ((jobDescriptionUploadState.value === 'idle' || jobDescriptionUploadState.value === 'error') && el && typeof el.click === 'function') {
+        el.click()
+        return
+    }
+
+    if (jobDescriptionUploadState.value === 'idle' || jobDescriptionUploadState.value === 'error') {
+        const tmp = document.createElement('input')
+        tmp.type = 'file'
+        tmp.accept = '.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,.pdf'
+        tmp.onchange = (e) => onJdFileChange(e)
+        tmp.click()
     }
 }
 
+function onJdFileChange(e) {
+    jdInputMode.value = 'file'
+    const file = e.target.files?.[0]
+    console.log('🔍 onJdFileChange called, file:', file?.name)
+    if (file) handleJdFileUploadRequest(file)
+}
+
+function onJdDrop(e) {
+    e.preventDefault()
+    const file = e.dataTransfer.files?.[0]
+    console.log('🔍 onJdDrop called, file:', file?.name)
+    if (file) handleJdFileUploadRequest(file)
+}
+
+async function handleJdFileUploadRequest(file) {
+    console.log('▶️ handleJdFileUploadRequest started, file:', file?.name)
+    if (!file) return
+
+    const fileNameLower = file.name.toLowerCase()
+    console.log('📝 File name:', fileNameLower)
+    if (!fileNameLower.endsWith('.docx') && !fileNameLower.endsWith('.pdf')) {
+        jobDescriptionUploadState.value = 'error'
+        jdErrorMsg.value = 'Chỉ chấp nhận file DOCX hoặc PDF'
+        console.log('❌ File rejected - invalid type')
+        return
+    }
+
+    jobDescriptionFileName.value = file.name
+    jobDescriptionUploadState.value = 'uploading'
+    jobDescriptionUploadProgress.value = 0
+    console.log('⏳ State changed to uploading, progress:', jobDescriptionUploadProgress.value)
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+        // Ưu tiên localStorage vì token được lưu ở đó sau login
+        const token = localStorage.getItem('access_token') ||
+            localStorage.getItem('token') ||
+            authStore.token
+        const headers = {}
+
+        if (token) {
+            headers.Authorization = `Bearer ${token}`
+            console.log('🔐 JD Token found:', token.substring(0, 30) + '...')
+        } else {
+            console.error('❌ JD: NO TOKEN FOUND!')
+            console.log('   - localStorage access_token:', localStorage.getItem('access_token'))
+            console.log('   - localStorage token:', localStorage.getItem('token'))
+            console.log('   - authStore.token:', authStore.token)
+            jobDescriptionUploadState.value = 'error'
+            jdErrorMsg.value = 'Chưa đăng nhập. Vui lòng đăng nhập lại.'
+            return
+        }
+
+        console.log('🌐 Uploading to:', buildApiUrl('/api/v1/job-description/upload'))
+        console.log('📦 FormData contains:', file.name, 'size:', file.size, 'bytes')
+
+        const response = await axios.post(buildApiUrl('/api/v1/job-description/upload'), formData, {
+            headers,
+            onUploadProgress: (e) => {
+                const percent = Math.round((e.loaded / e.total) * 100)
+                jobDescriptionUploadProgress.value = percent
+                console.log('📊 Progress:', percent, '%')
+            },
+        })
+
+        console.log('✅ Upload success, status:', response.status)
+        console.log('📄 Response data:', response.data)
+        jobDescriptionUploadProgress.value = 100
+        // Lưu file_path trả về từ server
+        jdPath.value = response.data.file_path
+        jobDescriptionFileName.value = response.data.file_name
+        jobDescriptionUploadState.value = 'success'
+        fileName.value = file.name
+        console.log('🎉 JD upload complete, state:', jobDescriptionUploadState.value)
+    } catch (err) {
+        console.error('💥 Upload error:', err)
+        console.error('📍 Error status:', err.response?.status)
+        console.error('📋 Error detail:', err.response?.data?.detail)
+        console.error('🔗 Error URL:', err.config?.url)
+        console.error('🔑 Auth header:', err.config?.headers?.Authorization?.substring(0, 30) + '...')
+        jobDescriptionUploadState.value = 'error'
+        jdErrorMsg.value = err.response?.data?.detail || err.message || 'Có lỗi xảy ra, vui lòng thử lại'
+        console.error('💾 Error message set to:', jdErrorMsg.value)
+    }
+}
+
+async function handleJdTextUploadRequest() {
+    const text = jobDescriptionText.value.trim()
+    if (!text) {
+        ElMessage.error('Vui lòng dán nội dung mô tả công việc')
+        return
+    }
+
+    jobDescriptionUploadState.value = 'uploading'
+    jobDescriptionUploadProgress.value = 100
+    jobDescriptionFileName.value = 'job_description.txt'
+
+    try {
+        const token = localStorage.getItem('access_token') ||
+            localStorage.getItem('token') ||
+            authStore.token
+        const headers = token ? { Authorization: `Bearer ${token}` } : {}
+
+        const response = await axios.post(
+            buildApiUrl('/api/v1/job-description/upload-text'),
+            {
+                text,
+                file_name: 'job_description_pasted'
+            },
+            { headers }
+        )
+
+        jdPath.value = response.data.file_path
+        jobDescriptionFileName.value = response.data.file_name || 'job_description.txt'
+        jobDescriptionUploadState.value = 'success'
+        jdErrorMsg.value = ''
+        ElMessage.success('Đã gửi JD dạng text thành công')
+    } catch (err) {
+        jobDescriptionUploadState.value = 'error'
+        jdErrorMsg.value = err.response?.data?.detail || err.message || 'Có lỗi xảy ra, vui lòng thử lại'
+    }
+}
+
+function onCompanyCardClick() {
+    const el = companyFileInputRef.value
+    if ((companyUploadState.value === 'idle' || companyUploadState.value === 'error') && el && typeof el.click === 'function') {
+        el.click()
+        return
+    }
+
+    if (companyUploadState.value === 'idle' || companyUploadState.value === 'error') {
+        const tmp = document.createElement('input')
+        tmp.type = 'file'
+        tmp.accept = '.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf,.pdf'
+        tmp.onchange = (e) => onCompanyFileChange(e)
+        tmp.click()
+    }
+}
+
+function onCompanyFileChange(e) {
+    const file = e.target.files?.[0]
+    console.log('onCompanyFileChange called, file:', file?.name)
+    if (file) handleCompanyFileUploadRequest(file)
+}
+
+function onCompanyDrop(e) {
+    e.preventDefault()
+    const file = e.dataTransfer.files?.[0]
+    console.log('onCompanyDrop called, file:', file?.name)
+    if (file) handleCompanyFileUploadRequest(file)
+}
+
+async function handleCompanyFileUploadRequest(file) {
+    console.log('handleCompanyFileUploadRequest started, file:', file?.name)
+    if (!file) return
+
+    const fileNameLower = file.name.toLowerCase()
+    if (!fileNameLower.endsWith('.docx') && !fileNameLower.endsWith('.pdf')) {
+        companyUploadState.value = 'error'
+        companyErrorMsg.value = 'Chỉ chấp nhận file DOCX hoặc PDF'
+        return
+    }
+
+    companyFileName.value = file.name
+    companyUploadState.value = 'uploading'
+    companyUploadProgress.value = 0
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+        const token = localStorage.getItem('access_token') ||
+            localStorage.getItem('token') ||
+            authStore.token
+        const headers = {}
+
+        if (token) {
+            headers.Authorization = `Bearer ${token}`
+            console.log('🔐 Company Token found')
+        }
+
+        const response = await axios.post(buildApiUrl('/api/v1/company-research/upload'), formData, {
+            headers,
+            onUploadProgress: (e) => {
+                const percent = Math.round((e.loaded / e.total) * 100)
+                companyUploadProgress.value = percent
+            },
+        })
+
+        companyUploadProgress.value = 100
+        companyPath.value = response.data.file_path
+        companyFileName.value = response.data.file_name
+        companyUploadState.value = 'success'
+        console.log('✅ Company upload success')
+    } catch (err) {
+        console.error('❌ Company upload error:', err)
+        companyUploadState.value = 'error'
+        companyErrorMsg.value = err.response?.data?.detail || err.message || 'Có lỗi xảy ra, vui lòng thử lại'
+    }
+}
+
+async function handleCompanyTextUploadRequest() {
+    const text = companyResearchText.value.trim()
+    if (!text) {
+        ElMessage.error('Vui lòng dán nội dung nghiên cứu công ty')
+        return
+    }
+
+    companyUploadState.value = 'uploading'
+    companyUploadProgress.value = 100
+    companyFileName.value = 'company_research.txt'
+
+    try {
+        const token = localStorage.getItem('access_token') ||
+            localStorage.getItem('token') ||
+            authStore.token
+        const headers = token ? { Authorization: `Bearer ${token}` } : {}
+
+        const response = await axios.post(
+            buildApiUrl('/api/v1/company-research/upload-text'),
+            {
+                text,
+                file_name: 'company_research_pasted'
+            },
+            { headers }
+        )
+
+        companyPath.value = response.data.file_path
+        companyFileName.value = response.data.file_name || 'company_research.txt'
+        companyUploadState.value = 'success'
+        companyErrorMsg.value = ''
+        ElMessage.success('Đã gửi Company Research dạng text thành công')
+    } catch (err) {
+        companyUploadState.value = 'error'
+        companyErrorMsg.value = err.response?.data?.detail || err.message || 'Có lỗi xảy ra, vui lòng thử lại'
+    }
+}
+
+function resetCompanyUpload() {
+    companyUploadState.value = 'idle'
+    companyUploadProgress.value = 0
+    companyFileName.value = ''
+    companyErrorMsg.value = ''
+    companyPath.value = null
+    companyInputMode.value = 'file'
+    companyResearchText.value = ''
+    if (companyFileInputRef.value) companyFileInputRef.value.value = ''
+}
+
+// ── Auto-scroll to Analysis Panel when CV & JD ready ──────────────────────
+const analysisPanelRef = ref(null)
+
+function scrollToAnalysisPanel() {
+    if (analysisPanelRef.value) {
+        setTimeout(() => {
+            analysisPanelRef.value.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            })
+        }, 300)
+    }
+}
+
+// Watch CV and JD ready state to update step and auto-scroll
+watch([cvReady, jdReady], ([cvReadyVal, jdReadyVal]) => {
+    if (cvReadyVal && jdReadyVal) {
+        // Both CV and JD are ready
+        activeStep.value = 1
+        scrollToAnalysisPanel()
+    } else if (cvReadyVal || jdReadyVal) {
+        // Only one file uploaded
+        activeStep.value = 0
+    }
+}, { flush: 'post' })
 </script>
 
 
