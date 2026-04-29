@@ -114,7 +114,12 @@ async function handleLogin(payload) {
     try {
         await authStore.login(payload)
         await authStore.fetchProfile()
-        await router.push('/dashboard')
+        console.log('user dd', authStore.user)
+        if (authStore.user.is_superuser) {
+            await router.push('/admin/dashboard')
+        } else {
+            await router.push('/dashboard')
+        }
     } catch (error) {
         errorMessage.value = error?.message || 'Đăng nhập thất bại. Vui lòng thử lại.'
     } finally {
