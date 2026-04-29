@@ -1,105 +1,18 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
-/* =========================
-   Lazy-load Layouts
-========================= */
-const DefaultLayout = () => import('@/views/layouts/LayoutDefault.vue')
-const AuthLayout = () => import('@/views/layouts/AuthLayout.vue')
+import { clientRoutes } from './routes/client/index'
+import { adminRoutes } from './routes/admin/index'
 
 /* =========================
-   Lazy-load Views
+   Router Instance
 ========================= */
-const HomeView = () => import('@/views/HomeView.vue')
-const WebRTCView = () => import('@/views/WebRTCView.vue')
-const SpeechView = () => import('@/views/SpeechView.vue')
-const AboutView = () => import('@/views/AboutView.vue')
-const NotFoundView = () => import('@/views/NotFoundView.vue')
-const LoginView = () => import('@/views/Login/LoginView.vue')
-const AuthCallbackView = () => import('@/views/Login/AuthCallbackView.vue')
-
-const routes = [
-  /* =========================
-     Default Layout (Landing)
-  ========================= */
-  {
-    path: '/',
-    component: DefaultLayout,
-    children: [
-      {
-        path: '',
-        name: 'home',
-        component: HomeView,
-        meta: { title: 'Trang chủ' },
-      },
-      {
-        path: 'webrtc',
-        name: 'webrtc',
-        component: WebRTCView,
-        meta: { title: 'WebRTC Demo' },
-      },
-      {
-        path: 'speech',
-        name: 'speech',
-        component: SpeechView,
-        meta: { title: 'Web Speech API Demo' },
-      },
-      {
-        path: 'about',
-        name: 'about',
-        component: AboutView,
-        meta: { title: 'Giới thiệu' },
-      },
-    ],
-  },
-
-  /* =========================
-     Auth Layout
-  ========================= */
-  {
-    path: '/login',
-    component: AuthLayout,
-    children: [
-      {
-        path: '',
-        name: 'login',
-        component: LoginView,
-        meta: { title: 'Đăng nhập' },
-      },
-    ],
-  },
-
-
-  {
-    path: '/auth/callback',
-    component: AuthCallbackView,
-  },
-
-  /* =========================
-     404
-  ========================= */
-  {
-    path: '/:pathMatch(.*)*',
-    name: 'not-found',
-    component: NotFoundView,
-    meta: { title: '404 - Không tìm thấy' },
-  },
-
-  /* =========================
-     Dashboard
-  ========================= */
-  {
-    path: '/dashboard',
-    name: 'dashboard',
-    component: () => import('@/views/dashboard/index.vue'),
-    meta: { title: 'Bảng điều khiển', requiresAuth: true },
-  },
-
-]
-
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes,
+  routes: [
+    ...clientRoutes,
+    ...adminRoutes,
+  ],
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) return savedPosition
     if (to.hash) return { el: to.hash, behavior: 'smooth' }
