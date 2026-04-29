@@ -69,9 +69,9 @@
 
       <!-- Results state -->
       <div v-else-if="analysisCompleted && analysisData" class="space-y-6">
-        <!-- Score circle -->
-        <div class="flex justify-center">
-          <div class="relative w-36 h-36">
+        <!-- Score circle & Detailed Breakdown -->
+        <div class="flex flex-col md:flex-row items-center justify-center gap-10">
+          <div class="relative w-36 h-36 flex-shrink-0">
             <!-- Background circle -->
             <svg class="w-full h-full absolute" viewBox="0 0 160 160" style="transform: rotate(-90deg);">
               <circle cx="80" cy="80" r="75" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="8" />
@@ -94,6 +94,21 @@
                 {{ analysisData.overall_score }}
               </span>
               <span class="text-xs mt-1" style="color:rgba(255,255,255,0.5);">/ 100</span>
+            </div>
+          </div>
+
+          <!-- Detailed Scores Breakdown -->
+          <div v-if="detailedScoresList && detailedScoresList.length > 0" class="flex flex-col gap-3 w-full max-w-[280px]">
+            <div v-for="item in detailedScoresList" :key="item.label">
+              <div class="flex justify-between items-center text-[12px] mb-1.5">
+                <span style="color:rgba(255,255,255,0.75)">{{ item.label }}</span>
+                <span class="font-bold text-white">{{ item.score }}/{{ item.max }}</span>
+              </div>
+              <div class="w-full h-2 rounded-full overflow-hidden" style="background:rgba(255,255,255,0.05);">
+                <div class="h-full rounded-full transition-all duration-1000" 
+                     :style="`width: ${(item.score / item.max) * 100}%; background: ${item.color}`">
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -292,6 +307,17 @@ function getScoreColor(score) {
     return { main: '#f87171', start: '#fb7185', end: '#dc2626' }
   }
 }
+
+const detailedScoresList = computed(() => {
+  if (!analysisData.value || !analysisData.value.detailed_scores) return [];
+  const scores = analysisData.value.detailed_scores;
+  return [
+    { label: 'Kinh nghiệm', score: scores.experience_score || 0, max: 50, color: '#4ade80' },
+    { label: 'Kỹ năng', score: scores.skills_score || 0, max: 30, color: '#3b82f6' },
+    { label: 'Học vấn', score: scores.education_score || 0, max: 10, color: '#f59e0b' },
+    { label: 'Độ khớp công ty', score: scores.company_fit_score || 0, max: 10, color: '#a855f7' }
+  ];
+})
 
 function getScoreLabel(score) {
   if (score >= 85) return 'Rất phù hợp'
