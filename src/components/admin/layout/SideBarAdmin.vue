@@ -17,7 +17,7 @@
 
         <!-- Nav -->
         <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-            <button v-for="item in navItems" :key="item.label"
+            <button v-for="item in visibleNavItems" :key="item.label"
                 class="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150"
                 :style="route.path === item.route
                     ? 'background: #4F46E5; border: 1px solid rgba(79, 70, 229, 0.2); color:#fff;'
@@ -39,7 +39,7 @@
             <div class="flex-1 min-w-0">
                 <div class="text-[12.5px] font-semibold text-white truncate">{{ auth.userName }}</div>
                 <div class="text-[10.5px] truncate" style="color:rgba(255,255,255,0.38);">{{ auth.user?.email || 'Khách'
-                    }}</div>
+                }}</div>
             </div>
             <button @click="handleLogout"
                 class="w-7 h-7 flex items-center justify-center rounded-lg transition-colors hover:bg-white/10"
@@ -62,7 +62,6 @@ import icon_cdht from '@/assets/icon/admin/dashboard/cdht.svg'
 import icon_chq from '@/assets/icon/admin/dashboard/chq.svg'
 import icon_ppv from '@/assets/icon/admin/dashboard/ppv.svg'
 import icon_db from '@/assets/icon/admin/dashboard/db.svg'
-import { ro } from 'element-plus/es/locale/index.mjs'
 
 const router = useRouter()
 const route = useRoute()
@@ -73,26 +72,31 @@ const navItems = ref([
         label: 'Bảng điều khiển', active: true,
         icon: icon_db,
         route: '/admin/dashboard',
+        permissions: [],
     },
     {
         label: 'Quản lý người dùng', active: false,
         icon: icon_qlnd,
         route: '/admin/user-management',
+        permissions: ['users.read'],
     },
     {
         label: 'Phòng phỏng vấn', active: false,
         icon: icon_ppv,
         route: '/admin/interview-rooms',
+        permissions: [],
     },
     {
         label: 'Cấu hình quyền', active: false,
         icon: icon_chq,
         route: '/admin/role-configuration',
+        permissions: ['roles.read'],
     },
     {
         label: 'Cài đặt hệ thống', active: false,
         icon: icon_cdht,
         route: '/admin/system-settings',
+        permissions: [],
     },
 ])
 
@@ -112,7 +116,10 @@ const recentSessions = [
 
 // Auth store
 const auth = useAuthStore();
-console.log('user', auth.user);
+const visibleNavItems = computed(() => {
+    return navItems.value.filter((item) => auth.hasAnyPermission(item.permissions))
+})
+
 const handleLogout = () => {
     auth.logout()
     router.push('/')

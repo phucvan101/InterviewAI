@@ -86,7 +86,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import BG_IMAGE from '@/assets/image/avatarAI.png'
@@ -114,8 +114,7 @@ async function handleLogin(payload) {
     try {
         await authStore.login(payload)
         await authStore.fetchProfile()
-        console.log('user dd', authStore.user)
-        if (authStore.user.is_superuser) {
+        if (authStore.user.can_access_admin) {
             await router.push('/admin/dashboard')
         } else {
             await router.push('/dashboard')
@@ -178,6 +177,7 @@ function switchToLogin() {
     errorMessage.value = ''
     isRegisterMode.value = false
 }
+
 </script>
 
 <style>

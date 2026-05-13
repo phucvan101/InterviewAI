@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import axios from 'axios'
 
 export const useAuthStore = defineStore('auth', () => {
   const ACCESS_TOKEN_KEY = 'access_token'
@@ -19,19 +20,6 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     return `${API_BASE_URL}${normalizedPath}`
-  }
-
-  function parseResponseBody(response) {
-    return response
-      .text()
-      .then((text) => {
-        if (!text) return null
-        try {
-          return JSON.parse(text)
-        } catch {
-          return { message: text }
-        }
-      })
   }
 
   function getErrorMessage(errorData, fallback = 'Có lỗi xảy ra, vui lòng thử lại.') {
@@ -65,6 +53,44 @@ export const useAuthStore = defineStore('auth', () => {
         source.profile ??
         null,
     }
+  }
+
+  function normalizePermissionCode(permission) {
+    if (!permission) return ''
+    if (typeof permission === 'string') return permission
+
+    return (
+      permission.code ??
+      permission.name ??
+      permission.permission_code ??
+      permission.permissionCode ??
+      ''
+    )
+  }
+
+  function collectPermissionCodes(source, result = new Set()) {
+    if (!source) return result
+
+    if (Array.isArray(source)) {
+      source.forEach((item) => collectPermissionCodes(item, result))
+      return result
+    }
+
+    if (typeof source === 'string') {
+      result.add(source)
+      return result
+    }
+
+    const directCode = normalizePermissionCode(source)
+    if (directCode) result.add(directCode)
+
+    collectPermissionCodes(source.permissions, result)
+    collectPermissionCodes(source.permission_codes, result)
+    collectPermissionCodes(source.permissionCodes, result)
+    collectPermissionCodes(source.roles, result)
+    collectPermissionCodes(source.role, result)
+
+    return result
   }
 
   function extractTokensFromParams(params) {
@@ -228,27 +254,29 @@ export const useAuthStore = defineStore('auth', () => {
       requestHeaders.Authorization = `Bearer ${token.value}`
     }
 
-    const response = await fetch(buildUrl(path), {
-      method,
-      headers: requestHeaders,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    })
+    try {
+      const response = await axios({
+        url: buildUrl(path),
+        method,
+        headers: requestHeaders,
+        data: body,
+      })
 
-    if (response.status === 401 && auth && retryOn401 && refreshToken.value) {
-      await refreshAccessToken()
-      return request(path, { ...options, retryOn401: false })
-    }
+      return response.data ?? null
+    } catch (err) {
+      const status = err.response?.status
+      const data = err.response?.data
 
-    const data = await parseResponseBody(response)
+      if (status === 401 && auth && retryOn401 && refreshToken.value) {
+        await refreshAccessToken()
+        return request(path, { ...options, retryOn401: false })
+      }
 
-    if (!response.ok) {
-      const error = new Error(getErrorMessage(data))
-      error.status = response.status
+      const error = new Error(getErrorMessage(data, err.message))
+      error.status = status
       error.data = data
       throw error
     }
-
-    return data
   }
 
   const user = ref(null)
@@ -258,6 +286,40 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isLoggedIn = computed(() => !!token.value)
   const userName = computed(() => user.value?.full_name || user.value?.name || 'Guest')
+  const userPermissions = computed(() => {
+    return Array.from(collectPermissionCodes(user.value))
+  })
+
+  const isSuperUser = computed(() => {
+    return user.value?.is_superuser === true || user.value?.is_superuser === 1
+  })
+
+  function hasPermission(permissionCode) {
+    if (!permissionCode) return true
+    if (isSuperUser.value) return true
+
+    return userPermissions.value.includes(permissionCode)
+  }
+
+  function hasAnyPermission(permissionCodes = []) {
+    const codes = Array.isArray(permissionCodes) ? permissionCodes : [permissionCodes]
+    const filteredCodes = codes.filter(Boolean)
+
+    if (!filteredCodes.length) return true
+    if (isSuperUser.value) return true
+
+    return filteredCodes.some((permissionCode) => hasPermission(permissionCode))
+  }
+
+  function hasAllPermissions(permissionCodes = []) {
+    const codes = Array.isArray(permissionCodes) ? permissionCodes : [permissionCodes]
+    const filteredCodes = codes.filter(Boolean)
+
+    if (!filteredCodes.length) return true
+    if (isSuperUser.value) return true
+
+    return filteredCodes.every((permissionCode) => hasPermission(permissionCode))
+  }
 
   async function login(credentials) {
     loading.value = true
@@ -416,6 +478,11 @@ export const useAuthStore = defineStore('auth', () => {
     refreshToken,
     loading,
     isLoggedIn, userName,
+    userPermissions,
+    isSuperUser,
+    hasPermission,
+    hasAnyPermission,
+    hasAllPermissions,
     login,
     register,
     loginWithGoogle,

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { ElMessage } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
 
 function toNumber(value, fallback = 0) {
@@ -63,23 +64,40 @@ function normalizeUser(user = {}) {
     }
 }
 
-function normalizeUpdatePayload(payload = {}) {
-    const nextPayload = { ...payload }
-
-    if ('name' in nextPayload && !('full_name' in nextPayload)) {
-        nextPayload.full_name = nextPayload.name
+function normalizeCreatePayload(payload = {}) {
+    return {
+        username: payload.username,
+        email: payload.email,
+        password: payload.password,
+        full_name: payload.full_name || payload.name || '',
+        is_active: payload.is_active ?? true,
+        is_verified: payload.is_verified ?? false,
+        auth_provider: payload.auth_provider || 'password',
     }
-    delete nextPayload.name
-
-    if ('status' in nextPayload && !('is_active' in nextPayload)) {
-        nextPayload.is_active = nextPayload.status === 'active'
-    }
-    delete nextPayload.status
-
-    delete nextPayload.plan
-
-    return nextPayload
 }
+
+// function normalizeUpdatePayload(payload = {}) {
+//     const nextPayload = { ...payload }
+
+//     if ('name' in nextPayload && !('full_name' in nextPayload)) {
+//         nextPayload.full_name = nextPayload.name
+//     }
+//     delete nextPayload.name
+
+//     if ('status' in nextPayload && !('is_active' in nextPayload)) {
+//         nextPayload.is_active = nextPayload.status === 'active'
+//     }
+//     delete nextPayload.status
+
+//     delete nextPayload.plan
+
+//     // Chỉ gửi password nếu người dùng có nhập, ngược lại xóa khỏi payload
+//     if (!nextPayload.password) {
+//         delete nextPayload.password
+//     }
+
+//     return nextPayload
+// }
 
 function extractListPayload(responseData) {
     const data = responseData?.data ?? responseData ?? {}
@@ -148,6 +166,7 @@ export const useManageUserStore = defineStore('manage-user', () => {
     const loading = ref(false)
     const detailLoading = ref(false)
     const submitting = ref(false)
+    const roleLoading = ref(false)
     const error = ref('')
 
     const pagination = ref({
@@ -222,6 +241,53 @@ export const useManageUserStore = defineStore('manage-user', () => {
         }
     }
 
+    async function createUser(payload) {
+        submitting.value = true
+        error.value = ''
+
+        try {
+            const response = await authStore.authorizedRequest(
+                `/api/v1/admin/users/`,
+                {
+                    method: 'POST',
+                    body: normalizeCreatePayload(payload),
+                }
+            )
+
+            const user = normalizeUser(extractDetailPayload(response))
+            users.value.unshift(user)
+            pagination.value.total += 1
+
+            ElMessage({
+                type: 'success',
+                message: 'Tạo người dùng thành công',
+            })
+
+            return user
+        } catch (err) {
+            error.value = err?.message || 'Không thể tạo người dùng.'
+            throw err
+        } finally {
+            submitting.value = false
+        }
+    }
+
+    async function getRoleUser(userId) {
+        roleLoading.value = true
+        error.value = ''
+
+        try {
+            const response = await authStore.authorizedRequest(`/api/v1/admin/users/${userId}/roles`)
+            const roles = extractListPayload(response)
+            return roles
+        } catch (err) {
+            error.value = err?.message || 'Không thể tải vai trò người dùng.'
+            throw err
+        } finally {
+            roleLoading.value = false
+        }
+    }
+
     async function updateUser(userId, payload) {
         submitting.value = true
         error.value = ''
@@ -229,7 +295,7 @@ export const useManageUserStore = defineStore('manage-user', () => {
         try {
             const response = await authStore.authorizedRequest(`/api/v1/admin/users/${userId}`, {
                 method: 'PATCH',
-                body: normalizeUpdatePayload(payload),
+                body: payload,
             })
 
             const user = normalizeUser(extractDetailPayload(response))
@@ -284,6 +350,28 @@ export const useManageUserStore = defineStore('manage-user', () => {
         }
     }
 
+    async function assignRoleToUser(userId, roleIds) {
+        submitting.value = true
+        error.value = ''
+
+        try {
+            await authStore.authorizedRequest(`/api/v1/admin/users/${userId}/roles`, {
+                method: 'PATCH',
+                body: { role_ids: roleIds },
+            })
+
+            // ElMessage({
+            //     type: 'success',
+            //     message: 'Gán vai trò cho người dùng thành công',
+            // })
+        } catch (err) {
+            error.value = err?.message || 'Không thể gán vai trò cho người dùng.'
+            throw err
+        } finally {
+            submitting.value = false
+        }
+    }
+
     return {
         users,
         selectedUser,
@@ -295,8 +383,11 @@ export const useManageUserStore = defineStore('manage-user', () => {
         hasUsers,
         fetchUsers,
         getUserDetail,
+        createUser,
         updateUser,
         deactivateUser,
         softDeleteUser,
+        assignRoleToUser,
+        getRoleUser,
     }
 })
