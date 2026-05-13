@@ -171,7 +171,7 @@ onMounted(() => {
                 </div>
             </div>
 
-            <div class="min-h-screen text-white">
+            <div class="text-white">
                 <div class="grid grid-cols-3 gap-6">
 
                     <!-- LEFT -->
