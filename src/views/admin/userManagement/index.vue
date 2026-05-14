@@ -24,11 +24,19 @@
                     </select>
                 </div>
 
-                <button
-                    class="flex items-center gap-2.5 px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-200 btn-common"
-                    @click="handleSearch">
-                    {{ manageUserStore.loading ? 'Đang tải...' : 'Tìm kiếm' }}
-                </button>
+                <div class="flex gap-2">
+                    <button v-if="authStore.hasPermission('users.create')"
+                        class="px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-200 btn-common"
+                        @click="handleCreate">
+                        {{ manageUserStore.loading ? 'Đang tải...' : 'Tạo người dùng' }}
+                    </button>
+
+                    <button
+                        class="px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-200 btn-common"
+                        @click="handleSearch">
+                        {{ manageUserStore.loading ? 'Đang tải...' : 'Tìm kiếm' }}
+                    </button>
+                </div>
             </div>
 
             <div class="overflow-hidden rounded-xl border border-[#1E293B]">
@@ -41,7 +49,7 @@
                     <div class="text-center">SỐ PHIÊN</div>
                     <div class="text-center">TRẠNG THÁI</div>
                     <div class="text-center">LOẠI TÀI KHOẢN</div>
-                    <div class="text-right">THAO TÁC</div>
+                    <div class="text-center">THAO TÁC</div>
                 </div>
 
                 <div v-if="manageUserStore.loading" class="px-6 py-8 text-center text-gray-400">
@@ -76,11 +84,16 @@
                             <span class="w-2 h-2 rounded-full"
                                 :class="user.status === 'active' ? 'bg-indigo-400' : 'bg-red-400'"></span>
 
-                            <select :value="user.status" @change="onStatusChange(user, $event)"
+                            <select v-if="authStore.hasPermission('users.deactivate')" :value="user.status"
+                                @change="onStatusChange(user, $event)"
                                 class="bg-transparent text-sm text-gray-300 border border-transparent focus:border-[#1E293B] px-2 py-1 rounded">
                                 <option value="active">Hoạt động</option>
                                 <option value="locked">Đã khóa</option>
                             </select>
+
+                            <span v-else class="text-sm text-gray-400">
+                                {{ user.status === 'active' ? 'Hoạt động' : 'Đã khóa' }}
+                            </span>
                         </div>
 
                         <div class="text-center">
@@ -88,20 +101,22 @@
                                 }}</span>
                         </div>
 
-                        <div class="flex justify-end gap-3 text-lg">
+                        <div class="flex justify-center gap-3 text-lg">
                             <button title="Xem chi tiết" @click="openViewDialog(user.id)" class="hover:text-indigo-400">
                                 <el-icon>
                                     <View />
                                 </el-icon>
                             </button>
 
-                            <button title="Chỉnh sửa" @click="openEditDialog(user.id)" class="hover:text-cyan-400">
+                            <button v-if="authStore.hasPermission('users.update')" title="Chỉnh sửa"
+                                @click="openEditDialog(user.id)" class="hover:text-cyan-400">
                                 <el-icon>
                                     <Edit />
                                 </el-icon>
                             </button>
 
-                            <button title="Xóa" @click="onDeleteUser(user)" class="hover:text-red-400">
+                            <button v-if="authStore.hasPermission('users.delete')" title="Xóa"
+                                @click="onDeleteUser(user)" class="hover:text-red-400">
                                 <el-icon color="#FF6E84">
                                     <Delete />
                                 </el-icon>
@@ -144,28 +159,87 @@
             </div>
         </el-dialog>
 
+        <el-dialog v-model="showCreateDialog" title="Tạo người dùng" width="520px">
+            <el-form label-position="top" :model="editForm">
+                <el-form-item label="Họ tên">
+                    <el-input v-model="createForm.full_name" />
+                </el-form-item>
+                <el-form-item label="Tài khoản">
+                    <el-input v-model="createForm.username" />
+                </el-form-item>
+                <el-form-item label="Email">
+                    <el-input v-model="createForm.email" />
+                </el-form-item>
+
+                <el-form-item label="Mật khẩu">
+                    <el-input v-model="createForm.password" :type="showPasswordCreate ? 'text' : 'password'">
+                        <template #suffix>
+                            <el-button link @click="showPasswordCreate = !showPasswordCreate"
+                                :icon="showPasswordCreate ? View : Hide" />
+                        </template>
+                    </el-input>
+                </el-form-item>
+
+                <el-form-item label="Trạng thái">
+                    <el-select v-model="createForm.status" class="w-full">
+                        <el-option label="Hoạt động" value="active" />
+                        <el-option label="Đã khóa" value="locked" />
+                    </el-select>
+                </el-form-item>
+
+                <el-form-item label="Chọn vai trò">
+                    <el-select v-model="createForm.roles" multiple class="w-full" placeholder="Chọn vai trò">
+                        <el-option v-for="role in roles" :key="role.id" :label="role.name" :value="role.id" />
+                    </el-select>
+                </el-form-item>
+            </el-form>
+
+            <template #footer>
+                <div class="flex justify-end gap-2">
+                    <el-button @click="showCreateDialog = false">Hủy</el-button>
+                    <el-button type="primary" :loading="manageUserStore.submitting" @click="onSubmitCreate">
+                        Tạo người dùng
+                    </el-button>
+                </div>
+            </template>
+        </el-dialog>
+
         <el-dialog v-model="showEditDialog" title="Cập nhật người dùng" width="520px">
             <el-form label-position="top" :model="editForm">
                 <el-form-item label="Họ tên">
-                    <el-input v-model="editForm.name" />
+                    <el-input v-model="editForm.full_name" />
                 </el-form-item>
-                <el-form-item label="Username">
+                <el-form-item label="Tài khoản">
                     <el-input v-model="editForm.username" />
                 </el-form-item>
                 <el-form-item label="Email">
                     <el-input v-model="editForm.email" />
                 </el-form-item>
-                <el-form-item label="Trạng thái">
+
+                <el-form-item label="Mật khẩu" v-if="editForm.auth_provider === 'password'">
+                    <el-input v-model="editForm.password" :type="showPasswordEdit ? 'text' : 'password'">
+                        <template #suffix>
+                            <el-button link @click="showPasswordEdit = !showPasswordEdit"
+                                :icon="showPasswordEdit ? View : Hide" />
+                        </template>
+                    </el-input>
+                </el-form-item>
+
+                <el-form-item v-if="authStore.hasPermission('users.deactivate')" label="Trạng thái">
                     <el-select v-model="editForm.status" class="w-full">
                         <el-option label="Hoạt động" value="active" />
                         <el-option label="Đã khóa" value="locked" />
                     </el-select>
                 </el-form-item>
-                <el-form-item label="Đã xóa mềm (is_deleted)">
-                    <el-switch v-model="editForm.is_deleted" />
+
+                <el-form-item label="Chọn vai trò">
+                    <el-select v-model="editForm.roles" multiple class="w-full" placeholder="Chọn vai trò">
+                        <el-option v-for="role in roles" :key="role.id" :label="role.name" :value="role.id" />
+                    </el-select>
                 </el-form-item>
-                <el-form-item label="Quyền admin (is_superuser)">
-                    <el-switch v-model="editForm.is_superuser" />
+
+                <el-form-item v-if="authStore.hasPermission('users.delete')" label="Đã xóa mềm (is_deleted)">
+                    <el-switch v-model="editForm.is_deleted" />
                 </el-form-item>
                 <el-form-item label="Đã xác thực (is_verified)">
                     <el-switch v-model="editForm.is_verified" />
@@ -187,27 +261,62 @@
 <script setup>
 import LayoutDefaultAdmin from '../layouts/LayoutDefaultAdmin.vue'
 import { ref, reactive, computed, onMounted } from 'vue'
-import { View, Edit, Delete } from '@element-plus/icons-vue'
+import { View, Edit, Delete, Hide } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import { useManageUserStore } from '@/stores/admin/manageUser'
+import { useAuthStore } from '@/stores/auth'
+import { useManagePermissionStore } from '../../../stores/admin/managePermission'
 
 const manageUserStore = useManageUserStore()
+const managePermissionStore = useManagePermissionStore()
+const authStore = useAuthStore()
 
 const users = computed(() => manageUserStore.users)
 const pagination = computed(() => manageUserStore.pagination)
 const selectedUser = computed(() => manageUserStore.selectedUser)
 
+const roles = computed(() => managePermissionStore.roles)
+
 const showViewDialog = ref(false)
+const showCreateDialog = ref(false)
+const showPasswordCreate = ref(false)
 const showEditDialog = ref(false)
 
+const USERNAME_REGEX = /^[a-zA-Z0-9_-]{3,50}$/
+const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*\d).{8,100}$/
+
 const currentEditUserId = ref(null)
-const editForm = reactive({
-    name: '',
+
+const createForm = reactive({
+    full_name: '',
     username: '',
     email: '',
     status: 'active',
+    roles: [],
+    password: '',
     is_deleted: false,
-    is_superuser: false,
+    is_verified: false,
+})
+
+const resetFormCreate = () => {
+    createForm.full_name = ''
+    createForm.username = ''
+    createForm.email = ''
+    createForm.status = 'active'
+    createForm.roles = []
+    createForm.password = ''
+    createForm.is_deleted = false
+    createForm.is_verified = false
+}
+
+const editForm = reactive({
+    full_name: '',
+    username: '',
+    email: '',
+    status: '',
+    password: '',
+    roles: [],
+    is_deleted: false,
     is_verified: false,
 })
 
@@ -247,6 +356,11 @@ async function handleSearch() {
     await loadUsers(1)
 }
 
+const handleCreate = () => {
+    showCreateDialog.value = true
+    fetchRoles();
+}
+
 async function changePage(step) {
     const nextPage = pagination.value.page + step
     if (nextPage < 1 || nextPage > pagination.value.totalPages) return
@@ -264,37 +378,108 @@ async function openViewDialog(userId) {
 
 async function openEditDialog(userId) {
     try {
+        await managePermissionStore.fetchRoles()
+        const roles = await manageUserStore.getRoleUser(userId)
         const user = await manageUserStore.getUserDetail(userId)
         currentEditUserId.value = user.id
-        editForm.name = user.name
+        editForm.full_name = user.name
         editForm.username = user.username || ''
         editForm.email = user.email
         editForm.status = user.status
         editForm.is_deleted = !!user.is_deleted
-        editForm.is_superuser = !!user.is_superuser
         editForm.is_verified = !!user.is_verified
+        editForm.auth_provider = user.auth_provider
+        editForm.roles = roles.items.map(role => role.id)
         showEditDialog.value = true
     } catch (error) {
         ElMessage.error(error?.message || 'Không thể tải người dùng để chỉnh sửa.')
     }
 }
 
+async function fetchRoles() {
+    try {
+        await managePermissionStore.fetchRoles()
+    } catch (error) {
+        ElMessage.error(error?.message || 'Không thể tải danh sách vai trò.')
+    }
+}
+
+async function onSubmitCreate() {
+    if (!createForm.full_name.trim()) return alert('Nhập họ tên')
+    if (!createForm.username.trim()) return alert('Nhập username')
+    if (!USERNAME_REGEX.test(createForm.username.trim())) {
+        return alert('Username không hợp lệ. Chỉ dùng a-zA-Z0-9_- và dài 3-50 ký tự.')
+    }
+    if (!createForm.email.trim()) return alert('Nhập email')
+    if (!createForm.password) return alert('Nhập mật khẩu')
+    if (!PASSWORD_REGEX.test(createForm.password)) {
+        return alert('Mật khẩu phải dài 8-100 ký tự, có ít nhất 1 chữ in hoa và 1 số.')
+    }
+
+    try {
+        const newUser = await manageUserStore.createUser({  // ← nhận user trả về
+            full_name: createForm.full_name.trim(),
+            username: createForm.username.trim(),
+            email: createForm.email.trim(),
+            password: createForm.password.trim(),
+            is_active: createForm.status === 'active',
+            is_deleted: createForm.is_deleted,
+            is_superuser: createForm.is_superuser,
+            is_verified: createForm.is_verified,
+        })
+
+        await manageUserStore.assignRoleToUser(newUser.id, createForm.roles)
+        showCreateDialog.value = false
+        resetFormCreate()
+        ElNotification({
+            title: 'Thông báo',
+            message: `Tài khoản ${newUser.username} đã được tạo thành công.`,
+            type: 'success',
+        })
+        await loadUsers(pagination.value.page)
+    } catch (error) {
+        ElMessage.error(error?.message || 'Tạo người dùng thất bại.')
+    }
+}
+
 async function onSubmitEdit() {
     if (!currentEditUserId.value) return
 
+    if (!editForm.full_name.trim()) return alert('Nhập họ tên')
+    if (!editForm.username.trim()) return alert('Nhập username')
+    if (!USERNAME_REGEX.test(editForm.username.trim())) {
+        return alert('Username không hợp lệ. Chỉ dùng a-zA-Z0-9_- và dài 3-50 ký tự.')
+    }
+    if (!editForm.email.trim()) return alert('Nhập email')
+    if (editForm.password && !PASSWORD_REGEX.test(editForm.password)) {
+        return alert('Mật khẩu phải dài 8-100 ký tự, có ít nhất 1 chữ in hoa và 1 số.')
+    }
+
     try {
-        await manageUserStore.updateUser(currentEditUserId.value, {
-            full_name: editForm.name,
-            username: editForm.username,
-            email: editForm.email,
+        const payload = {
+            full_name: editForm.full_name.trim(),
+            username: editForm.username.trim(),
+            email: editForm.email.trim(),
             is_active: editForm.status === 'active',
             is_deleted: editForm.is_deleted,
             is_superuser: editForm.is_superuser,
             is_verified: editForm.is_verified,
-        })
+        }
+
+        if (editForm.password) {
+            payload.password = editForm.password.trim()
+        }
+
+        await manageUserStore.updateUser(currentEditUserId.value, payload)
+
+        await manageUserStore.assignRoleToUser(currentEditUserId.value, editForm.roles)
 
         showEditDialog.value = false
-        ElMessage.success('Cập nhật người dùng thành công.')
+        ElNotification({
+            title: 'Thông báo',
+            message: `Tài khoản ${editForm.username} đã được cập nhật thành công.`,
+            type: 'success',
+        })
         await loadUsers(pagination.value.page)
     } catch (error) {
         ElMessage.error(error?.message || 'Cập nhật người dùng thất bại.')
@@ -314,7 +499,11 @@ async function onDeleteUser(user) {
         )
 
         await manageUserStore.softDeleteUser(user.id)
-        ElMessage.success('Đã xóa mềm tài khoản.')
+        ElNotification({
+            title: 'Thông báo',
+            message: `Đã xóa mềm tài khoản ${user.name}.`,
+            type: 'success',
+        })
 
         if (!manageUserStore.users.length && pagination.value.page > 1) {
             await loadUsers(pagination.value.page - 1)
