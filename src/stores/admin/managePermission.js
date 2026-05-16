@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { hi } from 'element-plus/es/locale/index.mjs'
 
 const PERMISSIONS_ENDPOINT = '/api/v1/admin/roles/permissions'
 const ROLE_ENDPOINT = '/api/v1/admin/roles/'
@@ -22,6 +23,7 @@ export const useManagePermissionStore = defineStore('manage-permission', () => {
     const permissions = ref([])
     const roles = ref([])
     const selectedPermission = ref(null)
+    const historyUpdateRoles = ref([])
 
     const loading = ref(false)
     const detailLoading = ref(false)
@@ -180,11 +182,27 @@ export const useManagePermissionStore = defineStore('manage-permission', () => {
         }
     }
 
+    async function historyUpdateRole(roleId) {
+        try {
+            const response = await authStore.authorizedRequest(
+                `${ROLE_ENDPOINT}${roleId}/audit-logs`, {
+                method: 'GET',
+            })
+            historyUpdateRoles.value = response.items
+        } catch (err) {
+            error.value =
+                err?.message || 'Không thể tải lịch sử cập nhật vai trò.'
+
+            throw err
+        }
+    }
+
     return {
         // state
         permissions,
         roles,
         selectedPermission,
+        historyUpdateRoles,
 
         loading,
         detailLoading,
@@ -202,6 +220,7 @@ export const useManagePermissionStore = defineStore('manage-permission', () => {
         fetchRoles,
         fetchRoleDetail,
         updateRole,
-        deleteRole
+        deleteRole,
+        historyUpdateRole,
     }
 })

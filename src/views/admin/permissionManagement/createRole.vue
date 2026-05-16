@@ -128,12 +128,12 @@ const handleCreateRole = async () => {
         return;
     }
 
-    if (!isValidName(name)) {
-        ElMessage.error(
-            'Tên chỉ được chứa chữ, số, dấu gạch dưới (_) và gạch ngang (-)'
-        )
-        return
-    }
+    // if (!isValidName(name)) {
+    //     ElMessage.error(
+    //         'Tên chỉ được chứa chữ, số, dấu gạch dưới (_) và gạch ngang (-)'
+    //     )
+    //     return
+    // }
 
     if (!permissionCodes.length) {
         ElMessage.error("Vui lòng chọn ít nhất một quyền");
