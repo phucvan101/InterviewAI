@@ -15,12 +15,39 @@ const roleId = computed(() => {
     return Array.isArray(id) ? id[0] : id;
 });
 
+const historyUpdateRoles = computed(() => managePermissionStore.historyUpdateRoles)
+
+const expandedHistory = ref(null)
+
+const toggleHistory = (id) => {
+    expandedHistory.value =
+        expandedHistory.value === id ? null : id
+}
+
 const form = reactive({
     name: "",
     description: ""
 });
 
 const selectedPermissionCodes = ref<string[]>([]);
+
+const formatDate = (date) => {
+    if (!date) return '-'
+
+    return new Date(date).toLocaleString('vi-VN')
+}
+
+const getNameKey = (key) => {
+    if (key === 'name') {
+        return 'Tên vai trò'
+    }
+    if (key === 'permission_codes') {
+        return 'Phân quyền chi tiết'
+    }
+    if (key === 'description') {
+        return 'Mô tả'
+    }
+}
 
 const permissionGroups = computed(() => {
     const grouped: Record<string, any> = {};
@@ -167,12 +194,12 @@ const handleUpdateRole = async () => {
         return;
     }
 
-    if (!isValidName(name)) {
-        ElMessage.error(
-            'Tên chỉ được chứa chữ, số, dấu gạch dưới (_) và gạch ngang (-)'
-        )
-        return
-    }
+    // if (!isValidName(name)) {
+    //     ElMessage.error(
+    //         'Tên chỉ được chứa chữ, số, dấu gạch dưới (_) và gạch ngang (-)'
+    //     )
+    //     return
+    // }
 
     if (!permissionCodes.length) {
         ElMessage.error("Vui lòng chọn ít nhất một quyền");
@@ -193,11 +220,19 @@ const handleUpdateRole = async () => {
     }
 }
 
+const fetchHistoryUpdateRoles = async (roleId) => {
+    try {
+        await managePermissionStore.historyUpdateRole(roleId);
+    } catch (error) {
+        console.error("Failed to fetch history update roles:", error);
+    }
+};
 
 onMounted(() => {
     fetchPermissions();
     if (roleId.value) {
         fetchRoleDetail(roleId.value);
+        fetchHistoryUpdateRoles(roleId.value);
     }
 });
 </script>
@@ -288,28 +323,150 @@ onMounted(() => {
                     </div>
 
                     <!-- RIGHT -->
-                    <div class="bg-[#111827] p-6 rounded-2xl h-fit">
-                        <h3 class="mb-4 font-semibold">Thao tác</h3>
+                    <div>
+                        <div class="bg-[#111827] p-6 rounded-2xl h-fit">
+                            <h3 class="mb-4 font-semibold">Thao tác</h3>
 
-                        <div class="d-flex gap-3">
-                            <el-button color="#4f46e5"
-                                class="rounded-md w-2/5 text-sm font-bold text-white transition-all duration-200 btn-common"
-                                :loading="managePermissionStore.submitting" :disabled="managePermissionStore.submitting"
-                                @click="handleUpdateRole">
-                                Cập nhật
-                            </el-button>
+                            <div class="d-flex gap-3">
+                                <el-button color="#4f46e5"
+                                    class="rounded-md w-2/5 text-sm font-bold text-white transition-all duration-200 btn-common"
+                                    :loading="managePermissionStore.submitting"
+                                    :disabled="managePermissionStore.submitting" @click="handleUpdateRole">
+                                    Cập nhật
+                                </el-button>
 
-                            <el-button color="#dcdfe6" class="rounded-md text-sm w-2/5" @click="handleCancel">
-                                Hủy
-                            </el-button>
+                                <el-button color="#dcdfe6" class="rounded-md text-sm w-2/5" @click="handleCancel">
+                                    Hủy
+                                </el-button>
+                            </div>
+
+                            <div class="mt-4 text-sm text-gray-400">
+                                <p class="font-semibold text-white mb-2">Tóm tắt quyền hạn</p>
+                                <p>Tổng số quyền chọn: {{ totalPermission }}</p>
+
+                                <div class="mt-2 p-3 bg-[#0F172A] rounded-lg text-xs">
+                                    Vai trò này sẽ có hiệu lực ngay lập tức sau khi lưu.
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="mt-4 text-sm text-gray-400">
-                            <p class="font-semibold text-white mb-2">Tóm tắt quyền hạn</p>
-                            <p>Tổng số quyền chọn: {{ totalPermission }}</p>
+                        <div class="mt-6">
+                            <h2 class="text-lg font-semibold mb-4 text-white">
+                                Lịch sử chỉnh sửa
+                            </h2>
 
-                            <div class="mt-2 p-3 bg-[#0F172A] rounded-lg text-xs">
-                                Vai trò này sẽ có hiệu lực ngay lập tức sau khi lưu.
+                            <div class="bg-[#111827] rounded-2xl p-6">
+                                <div class="max-h-[364px] min-h-[364px] overflow-y-auto pr-2 space-y-4">
+                                    <div v-for="item in historyUpdateRoles" :key="item.id">
+                                        <div v-if="item.action !== 'create'"
+                                            class="border border-gray-700 rounded-xl overflow-hidden">
+                                            <!-- Header -->
+                                            <div class="p-4 cursor-pointer hover:bg-[#1F2937] transition"
+                                                @click="toggleHistory(item.id)">
+                                                <div class="flex items-start justify-between gap-4">
+                                                    <div>
+                                                        <p class="text-white font-medium">
+                                                            {{ item.actor?.username }}
+                                                        </p>
+
+                                                        <p class="text-sm text-gray-400">
+                                                            {{ item.actor?.email }}
+                                                        </p>
+
+                                                        <!-- Fields changed -->
+                                                        <div class="flex flex-wrap gap-2 mt-3">
+                                                            <span v-for="key in Object.keys(item.new_data || {})"
+                                                                :key="key">
+                                                                <span
+                                                                    class="px-2 py-1 rounded-lg text-xs bg-indigo-500/20 text-indigo-400"
+                                                                    v-if="key !== 'updated_at'">{{ getNameKey(key)
+                                                                    }}</span>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="text-right shrink-0">
+                                                        <p class="text-xs text-gray-400">
+                                                            {{ formatDate(item.created_at) }}
+                                                        </p>
+
+                                                        <p class="text-blue-400 text-sm mt-2">
+                                                            {{
+                                                                expandedHistory === item.id
+                                                                    ? 'Ẩn chi tiết'
+                                                                    : 'Xem chi tiết'
+                                                            }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Detail -->
+                                            <div v-if="expandedHistory === item.id"
+                                                class="border-t border-gray-700 bg-[#0F172A] p-4">
+                                                <div v-for="(newValue, key) in item.new_data" :key="key">
+                                                    <div v-if="key !== 'updated_at'" class="mb-4 last:mb-0">
+                                                        <p class="text-sm text-yellow-400 mb-2">
+                                                            {{ getNameKey(key) }}
+                                                        </p>
+
+                                                        <div class="grid grid-cols-2 gap-4">
+                                                            <!-- Old -->
+                                                            <div class="bg-[#111827] rounded-lg p-3">
+                                                                <p class="text-xs text-gray-400 mb-2">
+                                                                    Giá trị cũ
+                                                                </p>
+
+                                                                <div class="text-sm text-red-400 break-all">
+                                                                    <template
+                                                                        v-if="Array.isArray(item.old_data?.[key])">
+                                                                        <ul class="list-disc pl-5">
+                                                                            <li v-for="(val, index) in item.old_data[key]"
+                                                                                :key="index">
+                                                                                {{ val }}
+                                                                            </li>
+                                                                        </ul>
+                                                                    </template>
+
+                                                                    <template v-else>
+                                                                        {{ item.old_data?.[key] ?? '-' }}
+                                                                    </template>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- New -->
+                                                            <div class="bg-[#111827] rounded-lg p-3">
+                                                                <p class="text-xs text-gray-400 mb-2">
+                                                                    Giá trị mới
+                                                                </p>
+
+                                                                <div class="text-sm text-green-400 break-all">
+                                                                    <template v-if="Array.isArray(newValue)">
+                                                                        <ul class="list-disc pl-5">
+                                                                            <li v-for="(val, index) in newValue"
+                                                                                :key="index">
+                                                                                {{ val }}
+                                                                            </li>
+                                                                        </ul>
+                                                                    </template>
+
+                                                                    <template v-else>
+                                                                        {{ newValue }}
+                                                                    </template>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Empty -->
+                                    <div v-if="!historyUpdateRoles?.length" class="text-center text-gray-400 py-10">
+                                        Không có lịch sử chỉnh sửa
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
