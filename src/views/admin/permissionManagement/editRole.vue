@@ -37,6 +37,18 @@ const formatDate = (date) => {
     return new Date(date).toLocaleString('vi-VN')
 }
 
+const getNameKey = (key) => {
+    if (key === 'name') {
+        return 'Tên vai trò'
+    }
+    if (key === 'permission_codes') {
+        return 'Phân quyền chi tiết'
+    }
+    if (key === 'description') {
+        return 'Mô tả'
+    }
+}
+
 const permissionGroups = computed(() => {
     const grouped: Record<string, any> = {};
 
@@ -367,7 +379,8 @@ onMounted(() => {
                                                                 :key="key">
                                                                 <span
                                                                     class="px-2 py-1 rounded-lg text-xs bg-indigo-500/20 text-indigo-400"
-                                                                    v-if="key !== 'updated_at'">{{ key }}</span>
+                                                                    v-if="key !== 'updated_at'">{{ getNameKey(key)
+                                                                    }}</span>
                                                             </span>
                                                         </div>
                                                     </div>
@@ -394,7 +407,7 @@ onMounted(() => {
                                                 <div v-for="(newValue, key) in item.new_data" :key="key">
                                                     <div v-if="key !== 'updated_at'" class="mb-4 last:mb-0">
                                                         <p class="text-sm text-yellow-400 mb-2">
-                                                            {{ key }}
+                                                            {{ getNameKey(key) }}
                                                         </p>
 
                                                         <div class="grid grid-cols-2 gap-4">
