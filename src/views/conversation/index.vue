@@ -60,7 +60,8 @@
                         Hiển thị {{ historyStartItem }}-{{ historyEndItem }} / {{ historyTotal }} phiên
                     </div>
                     <div class="pagination-controls">
-                        <button class="page-button" :disabled="page <= 1 || isHistoryLoading" @click="goToHistoryPage(page - 1)">
+                        <button class="page-button" :disabled="page <= 1 || isHistoryLoading"
+                            @click="goToHistoryPage(page - 1)">
                             <ChevronLeft :size="16" />
                         </button>
                         <button v-for="pageNumber in visibleHistoryPages" :key="pageNumber" class="page-button"
@@ -535,7 +536,7 @@ function appendInterviewerQuestion(response) {
         created_at: new Date().toISOString(),
     })
 
-    speak(question)
+    // speak(question)
 }
 
 function openSession(item) {
