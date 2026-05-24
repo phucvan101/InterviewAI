@@ -495,16 +495,17 @@
                     <!-- Fit analysis - using AnalysisPanel component -->
                     <div ref="analysisPanelRef">
                         <AnalysisPanel :cvReady="cvReady" :jdReady="jdReady" :cvFilePath="cvPath" :jdFilePath="jdPath"
-                            :companyFilePath="companyPath" />
+                            :companyFilePath="companyPath" @analysis-complete="handleAnalysisComplete"
+                            @analysis-reset="analysisReady = false" />
                     </div>
 
                     <!-- Action button -->
                     <div class="flex justify-end pt-2">
-                        <button
+                        <button :disabled="!analysisReady || isStartingConversation" @click="startConversation"
                             class="flex items-center gap-2.5 px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-200 btn-common"
                             @mouseenter="$event.currentTarget.style.transform = 'translateY(-1px)'; $event.currentTarget.style.boxShadow = '0 8px 24px rgba(79,70,229,0.55)'"
                             @mouseleave="$event.currentTarget.style.transform = ''; $event.currentTarget.style.boxShadow = '0 4px 18px rgba(79,70,229,0.4)'">
-                            Vào phòng phỏng vấn
+                            {{ isStartingConversation ? 'Đang tạo phiên...' : 'Vào phòng phỏng vấn' }}
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                                 stroke-width="2.2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -607,11 +608,20 @@ import AnalysisPanel from '@/components/AnalysisPanel.vue'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useRouter } from 'vue-router'
 
 const showJobDescriptionDialog = ref(false);
+const analysisReady = ref(false)
+const sessionId = ref(null)
+const cv_raw_text = ref('')
+const jd_raw_text = ref('')
+const isStartingConversation = ref(false)
+const analysisData = ref({})
+
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '')
 const authStore = useAuthStore()
+const router = useRouter()
 
 function buildApiUrl(path) {
     const normalizedPath = path.startsWith('/') ? path : `/${path}`
@@ -625,6 +635,15 @@ function buildApiUrl(path) {
     }
 
     return `${API_BASE_URL}${normalizedPath}`
+}
+
+
+function handleAnalysisComplete(data) {
+
+    sessionId.value = data.session_id
+    analysisData.value = data
+
+    console.log('sessionId:', sessionId.value)
 }
 
 // ── Navigation ───────────────────────────────────────────────────────────────
@@ -911,6 +930,49 @@ function getDocStyle(doc) {
 
 function onDocClick(doc) {
     // Now company research is handled by the card upload, no modal needed
+}
+
+async function getInforInterview(id_session) {
+    try {
+        const response = await authStore.authorizedRequest(`/api/v1/analysis/${id_session}`, {
+            method: 'GET',
+        })
+        cv_raw_text.value = response.cv_raw_text
+        jd_raw_text.value = response.jd_raw_text
+
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+async function startConversation() {
+    if (!cvPath.value || !jdPath.value) {
+        ElMessage.error('Hãy tải CV và JD trước khi bắt đầu phỏng vấn')
+        return
+    }
+
+    isStartingConversation.value = true
+
+    try {
+        const response = await authStore.authorizedRequest('/api/v1/conversations/', {
+            method: 'POST',
+            body: {
+                job_description: jd_raw_text.value,
+                cv_profile: cv_raw_text.value,
+            },
+        })
+
+        const sessionId = response.session_id
+        if (!sessionId) {
+            throw new Error('Backend không trả về session_id')
+        }
+
+        router.push(`/interview/${sessionId}`)
+    } catch (err) {
+        ElMessage.error(err.message || 'Không thể tạo phiên phỏng vấn')
+    } finally {
+        isStartingConversation.value = false
+    }
 }
 
 async function handleJdTextSubmit() {
@@ -1281,6 +1343,28 @@ function scrollToAnalysisPanel() {
     }
 }
 
+watch(sessionId, async (newSessionId) => {
+    if (!newSessionId) return
+
+    console.log('New session ID:', newSessionId)
+    await getInforInterview(newSessionId)  // await để đảm bảo xong mới check
+
+    // Kiểm tra null-safe trước khi truy cập
+    const overallScore = analysisData.value?.analysis.overall_score
+
+    console.log('overall_score:', overallScore)
+    console.log('analysisData:', analysisData.value)
+
+    if (overallScore < 30) {
+        console.log('CV không phù hợp với công việc')
+        analysisReady.value = false
+    } else {
+        analysisReady.value = true
+    }
+
+    console.log('analysisReady:', analysisReady.value)
+})
+
 // Watch CV and JD ready state to update step and auto-scroll
 watch([cvReady, jdReady], ([cvReadyVal, jdReadyVal]) => {
     if (cvReadyVal && jdReadyVal) {
@@ -1353,5 +1437,11 @@ watch([cvReady, jdReady], ([cvReadyVal, jdReadyVal]) => {
     /* giống #1e3a8a36 */
     backdrop-filter: blur(12px);
     border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.btn-common:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
 }
 </style>

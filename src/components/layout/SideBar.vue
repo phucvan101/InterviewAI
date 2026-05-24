@@ -19,11 +19,11 @@
         <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
             <button v-for="item in navItems" :key="item.label"
                 class="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150"
-                :style="item.active
+                :style="isActiveNav(item)
                     ? 'background: #4F46E5;border: 1px solid rgba(79, 70, 229, 0.2); border-radius: 10px; color:#fff;'
                     : 'color:rgba(255,255,255,0.5);'"
-                @mouseenter="!item.active && ($event.currentTarget.style.background = 'rgba(255,255,255,0.05)', $event.currentTarget.style.color = 'rgba(255,255,255,0.85)')"
-                @mouseleave="!item.active && ($event.currentTarget.style.background = '', $event.currentTarget.style.color = 'rgba(255,255,255,0.5)')"
+                @mouseenter="!isActiveNav(item) && ($event.currentTarget.style.background = 'rgba(255,255,255,0.05)', $event.currentTarget.style.color = 'rgba(255,255,255,0.85)')"
+                @mouseleave="!isActiveNav(item) && ($event.currentTarget.style.background = '', $event.currentTarget.style.color = 'rgba(255,255,255,0.5)')"
                 @click="setActiveNav(item)">
                 <span v-html="item.icon" class="w-[18px] h-[18px] flex-shrink-0" />
                 {{ item.label }}
@@ -66,16 +66,18 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 const router = useRouter()
+const route = useRoute()
 
 // ── Navigation ───────────────────────────────────────────────────────────────
 const navItems = ref([
     {
         label: 'Bảng điều khiển', active: true,
+        path: '/dashboard',
         icon: `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>`,
     },
     {
@@ -84,6 +86,7 @@ const navItems = ref([
     },
     {
         label: 'Phòng phỏng vấn', active: false,
+        path: '/conversation',
         icon: `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>`,
     },
     {
@@ -94,6 +97,16 @@ const navItems = ref([
 
 function setActiveNav(selected) {
     navItems.value.forEach(i => i.active = i === selected)
+    if (selected.path) router.push(selected.path)
+}
+
+function isActiveNav(item) {
+    if (item.path === '/conversation') {
+        return route.path.startsWith('/conversation') || route.path.startsWith('/interview')
+    }
+
+    if (item.path) return route.path.startsWith(item.path)
+    return item.active
 }
 
 const recentSessions = [

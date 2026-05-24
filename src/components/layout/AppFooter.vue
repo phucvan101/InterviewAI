@@ -31,7 +31,7 @@
                     <h4 class="font-semibold mb-4">Tài nguyên</h4>
                     <ul class="space-y-3 text-sm text-[rgba(255,255,255,0.65)]">
                         <li>Hướng dẫn phỏng vấn</li>
-                        <li>Ngân hàng câu hỏi</li>
+                        <!-- <li>Ngân hàng câu hỏi</li> -->
                         <li>Blog</li>
                     </ul>
                 </div>
@@ -47,7 +47,7 @@
             </div>
 
             <div class="flex items-center justify-between mt-6 text-sm text-[rgba(255,255,255,0.6)]">
-                <div>© 2023 AI Interview Prep Inc.</div>
+                <div>© 2026 AI Interview Prep Inc.</div>
                 <div class="flex items-center gap-3">
                     <span class="inline-block w-3 h-3 rounded-full bg-green-400"></span>
                     <span>Hệ thống hoạt động ổn định</span>

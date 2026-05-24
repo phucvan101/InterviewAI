@@ -153,6 +153,32 @@ export const useAuthStore = defineStore('auth', () => {
     return window.open(url, name, features)
   }
 
+  function getStoredAccessToken() {
+    return localStorage.getItem(ACCESS_TOKEN_KEY) || localStorage.getItem('token') || null
+  }
+
+  function getStoredRefreshToken() {
+    return localStorage.getItem(REFRESH_TOKEN_KEY) || null
+  }
+
+  function syncTokensFromStorage() {
+    const storedAccessToken = getStoredAccessToken()
+    const storedRefreshToken = getStoredRefreshToken()
+
+    if (storedAccessToken && storedAccessToken !== token.value) {
+      token.value = storedAccessToken
+    }
+
+    if (storedRefreshToken && storedRefreshToken !== refreshToken.value) {
+      refreshToken.value = storedRefreshToken
+    }
+
+    return {
+      accessToken: token.value,
+      refreshToken: refreshToken.value,
+    }
+  }
+
   function waitForPopupResult(popup, options = {}) {
     const { timeoutMs = 2 * 60 * 1000, intervalMs = 500 } = options
 
@@ -215,12 +241,14 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   function saveTokens(nextAccessToken, nextRefreshToken) {
+    // Set ref trước
     token.value = nextAccessToken || null
     refreshToken.value = nextRefreshToken || null
 
+    // Sau đó sync localStorage
     if (token.value) {
       localStorage.setItem(ACCESS_TOKEN_KEY, token.value)
-      localStorage.setItem('token', token.value) // Backward compatibility
+      localStorage.setItem('token', token.value)
     } else {
       localStorage.removeItem(ACCESS_TOKEN_KEY)
       localStorage.removeItem('token')
@@ -231,6 +259,9 @@ export const useAuthStore = defineStore('auth', () => {
     } else {
       localStorage.removeItem(REFRESH_TOKEN_KEY)
     }
+
+    // THÊM: verify ref đã update
+    console.log('saveTokens - token.value after save:', token.value?.substring(0, 30))
   }
 
   async function request(path, options = {}) {
@@ -250,9 +281,16 @@ export const useAuthStore = defineStore('auth', () => {
       requestHeaders['Content-Type'] = requestHeaders['Content-Type'] || 'application/json'
     }
 
-    if (auth && token.value) {
-      requestHeaders.Authorization = `Bearer ${token.value}`
+    const currentTokens = auth
+      ? syncTokensFromStorage()
+      : { accessToken: token.value, refreshToken: refreshToken.value }
+
+    if (auth && currentTokens.accessToken) {
+      requestHeaders.Authorization = `Bearer ${currentTokens.accessToken}`
     }
+
+    console.log('→ Request:', method, buildUrl(path))
+    console.log('→ Headers being sent:', requestHeaders)
 
     try {
       const response = await axios({
@@ -267,7 +305,7 @@ export const useAuthStore = defineStore('auth', () => {
       const status = err.response?.status
       const data = err.response?.data
 
-      if (status === 401 && auth && retryOn401 && refreshToken.value) {
+      if (status === 401 && auth && retryOn401 && currentTokens.refreshToken) {
         await refreshAccessToken()
         return request(path, { ...options, retryOn401: false })
       }
@@ -413,13 +451,18 @@ export const useAuthStore = defineStore('auth', () => {
 
     const response = await request('/api/v1/users/refresh', {
       method: 'POST',
-      body: {
-        refresh_token: refreshToken.value,
-      },
+      body: { refresh_token: refreshToken.value },
       retryOn401: false,
     })
 
+    // THÊM LOG
+    console.log('Refresh response:', response)
+
     const normalized = normalizeAuthData(response)
+
+    // THÊM LOG
+    console.log('Normalized after refresh:', normalized)
+
     if (!normalized.accessToken) {
       throw new Error('Làm mới token thất bại do thiếu access token.')
     }
