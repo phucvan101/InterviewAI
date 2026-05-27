@@ -492,14 +492,46 @@
                 <!-- ── Bottom panels ── -->
                 <div class="space-y-6">
 
-                    <!-- Fit analysis - using AnalysisPanel component -->
+                    <!-- Fit analysis -->
                     <div ref="analysisPanelRef">
                         <AnalysisPanel :cvReady="cvReady" :jdReady="jdReady" :cvFilePath="cvPath" :jdFilePath="jdPath"
                             :companyFilePath="companyPath" />
                     </div>
 
-                    <!-- Action button -->
-                    <div class="flex justify-end pt-2">
+                    <!-- Action button + Feedback side by side -->
+                    <div class="flex items-center justify-between pt-2">
+
+                        <!-- Feedback card -->
+                        <div class="flex items-center gap-3 px-5 py-3 rounded-2xl border flex-1 max-w-md transition-all duration-200 cursor-pointer"
+                            style="background:#141728; border-color:rgba(255,255,255,0.08);"
+                            @mouseenter="$event.currentTarget.style.borderColor = 'rgba(168,85,247,0.4)'; $event.currentTarget.style.background = '#1a1d35';"
+                            @mouseleave="$event.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; $event.currentTarget.style.background = '#141728';"
+                            @click="openScoringFeedback">
+
+                            <!-- Star icon -->
+                            <div class="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
+                                style="background:rgba(168,85,247,0.18);">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="#c084fc" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" />
+                                </svg>
+                            </div>
+
+                            <!-- Text content -->
+                            <div class="min-w-0">
+                                <p class="text-sm font-bold text-white leading-tight">Đánh giá chức năng</p>
+                                <p class="text-[11px] mt-0.5 leading-relaxed" style="color:rgba(255,255,255,0.38);">
+                                    Giúp chúng tôi cải thiện chất lượng
+                                </p>
+                            </div>
+
+                            <!-- Arrow -->
+                            <svg class="w-4 h-4 flex-shrink-0 ml-1" fill="none" viewBox="0 0 24 24" stroke="rgba(255,255,255,0.25)" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5 15 12m0 0 6.75-7.5M21 12H3" />
+                            </svg>
+                        </div>
+
+                        <!-- Action button -->
                         <button
                             class="flex items-center gap-2.5 px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-200 btn-common"
                             @mouseenter="$event.currentTarget.style.transform = 'translateY(-1px)'; $event.currentTarget.style.boxShadow = '0 8px 24px rgba(79,70,229,0.55)'"
@@ -598,6 +630,103 @@
 
 
     </LayoutInterview>
+
+    <!-- Scoring Feedback Modal -->
+    <el-dialog
+        v-model="showScoringFeedback"
+        :title="scoringFeedbackStep === 'initial' ? 'Hệ thống chấm điểm' : 'Cần cải thiện điểm nào?'"
+        width="480px"
+        class="scoring-feedback-dialog"
+        :close-on-click-modal="false"
+        :show-close="true">
+
+        <!-- Step 1: Yes / No question -->
+        <div v-if="scoringFeedbackStep === 'initial'" class="space-y-4">
+            <p class="text-sm text-gray-300 leading-relaxed">
+                Bạn có thấy hệ thống chấm điểm <span class="font-semibold text-white">hợp lý</span> không?
+            </p>
+
+            <!-- Visual indicator -->
+            <div class="flex items-center justify-center gap-8 py-3">
+                <button
+                    class="flex flex-col items-center gap-2 rounded-xl px-6 py-4 transition-all duration-150"
+                    style="background:rgba(34,197,94,0.12); border:1px solid rgba(34,197,94,0.25); min-width:110px;"
+                    @click="onScoringFeedbackYes">
+                    <div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl"
+                        style="background:rgba(34,197,94,0.2); border:1px solid rgba(34,197,94,0.3);">
+                        😊
+                    </div>
+                    <span class="text-[12px] font-semibold" style="color:#4ade80;">Hợp lý</span>
+                </button>
+
+                <button
+                    class="flex flex-col items-center gap-2 rounded-xl px-6 py-4 transition-all duration-150"
+                    style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2); min-width:110px;"
+                    @click="onScoringFeedbackNo">
+                    <div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl"
+                        style="background:rgba(239,68,68,0.18); border:1px solid rgba(239,68,68,0.3);">
+                        😕
+                    </div>
+                    <span class="text-[12px] font-semibold" style="color:#f87171;">Chưa hợp lý</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 2: Improvement options -->
+        <div v-else class="space-y-4">
+            <p class="text-sm text-gray-300 leading-relaxed">
+                Hãy chọn những <span class="font-semibold text-white">điểm thành phần</span> bạn cho rằng chưa hợp lý:
+            </p>
+
+            <div class="space-y-2">
+                <label
+                    v-for="option in scoringImproveOptions"
+                    :key="option.value"
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer transition-all duration-150"
+                    :style="selectedImproveOptions.includes(option.value)
+                        ? 'background:rgba(79,70,229,0.18); border-color:rgba(79,70,229,0.4);'
+                        : 'background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.1);'">
+                    <input
+                        type="checkbox"
+                        :value="option.value"
+                        v-model="selectedImproveOptions"
+                        class="hidden" />
+                    <div
+                        class="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 transition-all duration-150"
+                        :style="selectedImproveOptions.includes(option.value)
+                            ? 'background:#4f46e5; border-color:#4f46e5;'
+                            : 'background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.2);'">
+                        <svg v-if="selectedImproveOptions.includes(option.value)"
+                            class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor" stroke-width="3">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="m4.5 12.75 6 6 9-13.5" />
+                        </svg>
+                    </div>
+                    <span class="text-sm text-gray-200">{{ option.label }}</span>
+                </label>
+            </div>
+        </div>
+
+        <template #footer>
+            <div class="flex justify-end">
+                <el-button
+                    v-if="scoringFeedbackStep === 'improve'"
+                    style="border-radius:8px; background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.12); color:rgba(255,255,255,0.7);"
+                    @click="scoringFeedbackStep = 'initial'">
+                    ← Quay lại
+                </el-button>
+                <el-button
+                    v-if="scoringFeedbackStep === 'improve'"
+                    style="border-radius:8px;"
+                    class="btn-common"
+                    @click="submitScoringFeedback">
+                    Gửi phản hồi
+                </el-button>
+            </div>
+        </template>
+    </el-dialog>
+
 </template>
 
 <script setup>
@@ -609,6 +738,48 @@ import { useAuthStore } from '@/stores/auth'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const showJobDescriptionDialog = ref(false);
+
+// ── Scoring Feedback Modal ────────────────────────────────────────────────
+const showScoringFeedback = ref(false)
+const scoringFeedbackStep = ref('initial') // 'initial' | 'improve'
+const selectedImproveOptions = ref([])
+
+const scoringImproveOptions = [
+    { label: 'Điểm tổng quát', value: 'overall' },
+    { label: 'Kỹ năng kỹ thuật', value: 'technical' },
+    { label: 'Kinh nghiệm làm việc', value: 'experience' },
+    { label: 'Kỹ năng mềm', value: 'soft_skill' },
+    { label: 'Trình độ học vấn', value: 'education' },
+    { label: 'Ngôn ngữ & giao tiếp', value: 'language' },
+    { label: 'Mức lương kỳ vọng', value: 'salary' },
+]
+
+function openScoringFeedback() {
+    scoringFeedbackStep.value = 'initial'
+    selectedImproveOptions.value = []
+    showScoringFeedback.value = true
+}
+
+function onScoringFeedbackYes() {
+    showScoringFeedback.value = false
+    ElMessage({ message: 'Cảm ơn bạn đã phản hồi!', type: 'success' })
+}
+
+function onScoringFeedbackNo() {
+    scoringFeedbackStep.value = 'improve'
+}
+
+function submitScoringFeedback() {
+    if (selectedImproveOptions.value.length === 0) {
+        ElMessage.warning('Vui lòng chọn ít nhất một mục cần cải thiện')
+        return
+    }
+    showScoringFeedback.value = false
+    ElMessage({
+        message: `Đã gửi phản hồi: ${selectedImproveOptions.value.join(', ')}`,
+        type: 'success'
+    })
+}
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '')
 const authStore = useAuthStore()
@@ -1353,5 +1524,42 @@ watch([cvReady, jdReady], ([cvReadyVal, jdReadyVal]) => {
     /* giống #1e3a8a36 */
     backdrop-filter: blur(12px);
     border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+/* Scoring Feedback Dialog */
+.scoring-feedback-dialog .el-dialog {
+    background: #0f172a;
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    border-radius: 16px;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+}
+
+.scoring-feedback-dialog .el-dialog__header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    padding: 18px 24px 16px;
+}
+
+.scoring-feedback-dialog .el-dialog__title {
+    color: #e2e8f0;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.scoring-feedback-dialog .el-dialog__body {
+    padding: 20px 24px 12px;
+    color: #cbd5e1;
+}
+
+.scoring-feedback-dialog .el-dialog__footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    padding: 14px 24px;
+}
+
+.scoring-feedback-dialog .el-dialog__headerbtn .el-dialog__close {
+    color: #64748b;
+}
+
+.scoring-feedback-dialog .el-dialog__headerbtn:hover .el-dialog__close {
+    color: #e2e8f0;
 }
 </style>

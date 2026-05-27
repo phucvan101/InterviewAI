@@ -69,9 +69,11 @@
 
       <!-- Results state -->
       <div v-else-if="analysisCompleted && analysisData" class="space-y-6">
-        <!-- Score circle & Detailed Breakdown -->
-        <div class="flex flex-col md:flex-row items-center justify-center gap-10">
-          <div class="relative w-36 h-36 flex-shrink-0">
+        <!-- Score interpretation + Detail bars row -->
+        <div class="flex flex-col lg:flex-row items-center justify-center gap-8">
+
+          <!-- Score circle -->
+          <div class="relative w-36 h-36 flex-shrink-0 self-center">
             <!-- Background circle -->
             <svg class="w-full h-full absolute" viewBox="0 0 160 160" style="transform: rotate(-90deg);">
               <circle cx="80" cy="80" r="75" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="8" />
@@ -94,31 +96,98 @@
                 {{ analysisData.overall_score }}
               </span>
               <span class="text-xs mt-1" style="color:rgba(255,255,255,0.5);">/ 100</span>
+              <span class="text-[10px] font-semibold mt-1" style="color:rgba(255,255,255,0.45);">
+                {{ getScoreLabel(analysisData.overall_score) }}
+              </span>
             </div>
           </div>
 
-          <!-- Detailed Scores Breakdown -->
-          <div v-if="detailedScoresList && detailedScoresList.length > 0" class="flex flex-col gap-3 w-full max-w-[280px]">
-            <div v-for="item in detailedScoresList" :key="item.label">
-              <div class="flex justify-between items-center text-[12px] mb-1.5">
-                <span style="color:rgba(255,255,255,0.75)">{{ item.label }}</span>
-                <span class="font-bold text-white">{{ item.score }}/{{ item.max }}</span>
+          <!-- Detail score bars -->
+          <div class="flex-1 self-end space-y-3" style="max-width:480px;">
+            <h4 class="text-xs font-bold uppercase tracking-wider mb-3" style="color:rgba(255,255,255,0.4);">
+              Điểm chi tiết
+            </h4>
+
+            <!-- Experience -->
+            <div v-if="analysisData.detailed_scores?.experience_score != null">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-[12px] font-semibold text-white">Kinh nghiệm</span>
               </div>
-              <div class="w-full h-2 rounded-full overflow-hidden" style="background:rgba(255,255,255,0.05);">
-                <div class="h-full rounded-full transition-all duration-1000" 
-                     :style="`width: ${(item.score / item.max) * 100}%; background: ${item.color}`">
+              <div class="flex items-center gap-2">
+                <div class="h-2 flex-1 rounded-full overflow-hidden" style="background:rgba(255,255,255,0.07);">
+                  <div class="h-full rounded-full transition-all duration-1000"
+                    :style="{ width: (analysisData.detailed_scores.experience_score / 50 * 100) + '%', background: '#60a5fa' }" />
                 </div>
+                <span class="text-[12px] font-bold flex-shrink-0" style="color:#60a5fa;">
+                  {{ analysisData.detailed_scores.experience_score }}/50
+                </span>
+              </div>
+            </div>
+
+            <!-- Skills -->
+            <div v-if="analysisData.detailed_scores?.skills_total_score != null">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-[12px] font-semibold text-white">Kỹ năng</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="h-2 flex-1 rounded-full overflow-hidden" style="background:rgba(255,255,255,0.07);">
+                  <div class="h-full rounded-full transition-all duration-1000"
+                    :style="{ width: (analysisData.detailed_scores.skills_total_score / 30 * 100) + '%', background: '#a78bfa' }" />
+                </div>
+                <span class="text-[12px] font-bold flex-shrink-0" style="color:#a78bfa;">
+                  {{ analysisData.detailed_scores.skills_total_score }}/30
+                </span>
+              </div>
+            </div>
+
+            <!-- Education -->
+            <div v-if="analysisData.detailed_scores?.education_score != null">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-[12px] font-semibold text-white">Học vấn</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="h-2 flex-1 rounded-full overflow-hidden" style="background:rgba(255,255,255,0.07);">
+                  <div class="h-full rounded-full transition-all duration-1000"
+                    :style="{ width: (analysisData.detailed_scores.education_score / 10 * 100) + '%', background: '#4ade80' }" />
+                </div>
+                <span class="text-[12px] font-bold flex-shrink-0" style="color:#4ade80;">
+                  {{ analysisData.detailed_scores.education_score }}/10
+                </span>
+              </div>
+            </div>
+
+            <!-- Career Objectives -->
+            <div v-if="analysisData.detailed_scores?.career_objectives_score != null">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-[12px] font-semibold text-white">Mục tiêu nghề nghiệp</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="h-2 flex-1 rounded-full overflow-hidden" style="background:rgba(255,255,255,0.07);">
+                  <div class="h-full rounded-full transition-all duration-1000"
+                    :style="{ width: (analysisData.detailed_scores.career_objectives_score / 10 * 100) + '%', background: '#fb923c' }" />
+                </div>
+                <span class="text-[12px] font-bold flex-shrink-0" style="color:#fb923c;">
+                  {{ analysisData.detailed_scores.career_objectives_score }}/10
+                </span>
+              </div>
+            </div>
+
+            <!-- Company Fit -->
+            <div v-if="analysisData.detailed_scores?.company_fit_score != null">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-[12px] font-semibold text-white">Phù hợp công ty</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="h-2 flex-1 rounded-full overflow-hidden" style="background:rgba(255,255,255,0.07);">
+                  <div class="h-full rounded-full transition-all duration-1000"
+                    :style="{ width: (analysisData.detailed_scores.company_fit_score / 10 * 100) + '%', background: '#f472b6' }" />
+                </div>
+                <span class="text-[12px] font-bold flex-shrink-0" style="color:#f472b6;">
+                  {{ analysisData.detailed_scores.company_fit_score }}/10
+                </span>
               </div>
             </div>
           </div>
-        </div>
-
-        <!-- Score interpretation -->
-        <div class="text-center">
-          <h3 class="text-lg font-bold text-white mb-1">{{ getScoreLabel(analysisData.overall_score) }}</h3>
-          <p class="text-[13px]" style="color:rgba(255,255,255,0.6);">
-            {{ analysisData.score_rationale }}
-          </p>
         </div>
 
         <!-- Tabs for details -->
@@ -133,14 +202,118 @@
           </button>
         </div>
 
-        <!-- Tab content: Missing Skills -->
-        <div v-if="activeDetailTab === 'missing'">
-          <h4 class="text-sm font-bold text-white mb-3">Kỹ năng thiếu ({{ analysisData.missing_skills.length }})</h4>
-          <div class="grid grid-cols-2 gap-2">
-            <div v-for="(skill, idx) in analysisData.missing_skills" :key="`missing-${idx}`"
-              class="px-3 py-2 rounded-lg text-[12px]"
-              style="background:rgba(239,68,68,0.1); color:#fca5a5; border:1px solid rgba(239,68,68,0.2);">
-              • {{ skill }}
+        <!-- Tab content: Tổng quát -->
+        <div v-if="activeDetailTab === 'tongquan'">
+          <h4 class="text-sm font-bold text-white mb-3">Tổng quan kỹ năng</h4>
+
+          <!-- Summary Stats -->
+          <div class="grid grid-cols-3 gap-3 mb-4">
+            <div class="rounded-lg p-3 text-center" style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2);">
+              <p class="text-2xl font-black" style="color:#f87171;">
+                {{ analysisData.skills_detail?.missing?.length || 0 }}
+              </p>
+              <p class="text-[11px]" style="color:rgba(255,255,255,0.5);">Không đáp ứng</p>
+            </div>
+            <div class="rounded-lg p-3 text-center" style="background:rgba(251,191,36,0.1); border:1px solid rgba(251,191,36,0.2);">
+              <p class="text-2xl font-black" style="color:#fbbf24;">
+                {{ analysisData.skills_detail?.related?.length || 0 }}
+              </p>
+              <p class="text-[11px]" style="color:rgba(255,255,255,0.5);">Relevance</p>
+            </div>
+            <div class="rounded-lg p-3 text-center" style="background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.2);">
+              <p class="text-2xl font-black" style="color:#4ade80;">
+                {{ analysisData.skills_detail?.matched?.length || 0 }}
+              </p>
+              <p class="text-[11px]" style="color:rgba(255,255,255,0.5);">Perfect Match</p>
+            </div>
+          </div>
+
+          <!-- Quick preview: Missing skills (clickable like Không Đáp ứng tab) -->
+          <div v-if="analysisData.skills_detail?.missing?.length">
+            <h5 class="text-xs font-semibold mb-2" style="color:#f87171;">Không đáp ứng</h5>
+            <div class="flex flex-wrap gap-2">
+              <span
+                v-for="(skill, idx) in analysisData.skills_detail.missing"
+                :key="`miss-preview-${idx}`"
+                @click="toggleSkillDetail('missing', idx)"
+                class="px-3 py-1.5 rounded-full text-[12px] font-semibold cursor-pointer transition-all"
+                :class="{
+                  'ring-2 ring-red-400': expandedSkill?.type === 'missing' && expandedSkill?.index === idx
+                }"
+                :style="{
+                  background: skill.severity === 'high' ? 'rgba(239,68,68,0.2)' : 'rgba(239,68,68,0.1)',
+                  color: skill.severity === 'high' ? '#fca5a5' : '#f87171',
+                  border: skill.severity === 'high' ? '1px solid rgba(239,68,68,0.4)' : '1px solid rgba(239,68,68,0.2)'
+                }">
+                <span v-if="skill.importance === 'CRITICAL'" class="mr-1 text-[9px] px-1 py-0.5 rounded bg-red-500/30">!</span>
+                {{ skill.skill }}
+                <span v-if="expandedSkill?.type === 'missing' && expandedSkill?.index === idx" class="ml-1">▼</span>
+                <span v-else class="ml-1">▶</span>
+              </span>
+            </div>
+            <div v-if="expandedSkill?.type === 'missing'" class="mt-2 p-3 rounded-lg"
+              style="background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.2);">
+              <p class="text-[12px]" style="color:rgba(255,255,255,0.8);">
+                <span class="text-red-400 font-semibold">Lý do: </span>{{ getExpandedSkill()?.reason }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Quick preview: Perfect Match (clickable like Yêu cầu phù hợp tab) -->
+          <div v-if="analysisData.skills_detail?.matched?.length">
+            <h5 class="text-xs font-semibold mb-2 mt-3" style="color:#4ade80;">Perfect Match</h5>
+            <div class="flex flex-wrap gap-2">
+              <span
+                v-for="(skill, idx) in analysisData.skills_detail.matched"
+                :key="`match-preview-${idx}`"
+                @click="toggleSkillDetail('matched', idx)"
+                class="px-3 py-1.5 rounded-full text-[12px] font-semibold cursor-pointer transition-all"
+                :class="{
+                  'ring-2 ring-green-400': expandedSkill?.type === 'matched' && expandedSkill?.index === idx
+                }"
+                style="background:rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.25);">
+                {{ skill.skill }}
+                <span v-if="expandedSkill?.type === 'matched' && expandedSkill?.index === idx" class="ml-1">▼</span>
+                <span v-else class="ml-1">▶</span>
+              </span>
+            </div>
+            <div v-if="expandedSkill?.type === 'matched'" class="mt-2 p-3 rounded-lg"
+              style="background:rgba(34,197,94,0.08); border:1px solid rgba(34,197,94,0.2);">
+              <p class="text-[12px]" style="color:rgba(255,255,255,0.8);">
+                <span class="text-green-400 font-semibold">Lý do: </span>{{ getExpandedSkill()?.reason }}
+              </p>
+              <p v-if="getExpandedSkill()?.evidence" class="text-[11px] mt-1 italic" style="color:rgba(255,255,255,0.5);">
+                {{ getExpandedSkill()?.evidence }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Quick preview: Relevance Match (clickable like Yêu cầu phù hợp tab) -->
+          <div v-if="analysisData.skills_detail?.related?.length">
+            <h5 class="text-xs font-semibold mb-2 mt-3" style="color:#fbbf24;">Relevance Match</h5>
+            <div class="flex flex-wrap gap-2">
+              <span
+                v-for="(skill, idx) in analysisData.skills_detail.related"
+                :key="`related-preview-${idx}`"
+                @click="toggleSkillDetail('related', idx)"
+                class="px-3 py-1.5 rounded-full text-[12px] font-semibold cursor-pointer transition-all"
+                :class="{
+                  'ring-2 ring-yellow-400': expandedSkill?.type === 'related' && expandedSkill?.index === idx
+                }"
+                style="background:rgba(251,191,36,0.2); color:#fbbf24; border:2px solid rgba(251,191,36,0.6);">
+                {{ skill.skill }}
+                <span v-if="expandedSkill?.type === 'related' && expandedSkill?.index === idx" class="ml-1">▼</span>
+                <span v-else class="ml-1">▶</span>
+              </span>
+            </div>
+            <div v-if="expandedSkill?.type === 'related'" class="mt-2 p-3 rounded-lg"
+              style="background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.2);">
+              <p class="text-[12px]" style="color:rgba(255,255,255,0.8);">
+                <span class="text-yellow-400 font-semibold">Lý do: </span>{{ getExpandedSkill()?.reason }}
+              </p>
+              <p v-if="getExpandedSkill()?.evidence" class="text-[11px] mt-1 italic" style="color:rgba(255,255,255,0.5);">
+                {{ getExpandedSkill()?.evidence }}
+              </p>
             </div>
           </div>
         </div>
@@ -148,12 +321,18 @@
         <!-- Tab content: Strengths -->
         <div v-else-if="activeDetailTab === 'strengths'">
           <h4 class="text-sm font-bold text-white mb-3">Điểm mạnh chính</h4>
+          <div v-if="!analysisData.main_strengths?.length" class="text-center py-4" style="color:rgba(255,255,255,0.4);">
+            Không có dữ liệu điểm mạnh.
+          </div>
           <div class="space-y-2">
             <div v-for="(strength, idx) in analysisData.main_strengths" :key="`strength-${idx}`"
               class="px-4 py-3 rounded-lg"
               style="background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.2);">
-              <p class="text-[13px] leading-relaxed" style="color:#86efac;">
-                ✓ {{ strength }}
+              <p class="text-[13px] font-semibold leading-relaxed" style="color:#86efac;">
+                ✓ {{ getStrengthText(strength) }}
+              </p>
+              <p v-if="getStrengthDescription(strength)" class="text-[12px] mt-1 leading-relaxed" style="color:rgba(134,239,172,0.7);">
+                {{ getStrengthDescription(strength) }}
               </p>
             </div>
           </div>
@@ -162,13 +341,26 @@
         <!-- Tab content: Development -->
         <div v-else-if="activeDetailTab === 'development'">
           <h4 class="text-sm font-bold text-white mb-3">Khu vực cần phát triển</h4>
+          <div v-if="!analysisData.areas_for_development?.length" class="text-center py-4" style="color:rgba(255,255,255,0.4);">
+            Không có dữ liệu phát triển.
+          </div>
           <div class="space-y-2">
             <div v-for="(area, idx) in analysisData.areas_for_development" :key="`area-${idx}`"
               class="px-4 py-3 rounded-lg"
               style="background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.2);">
-              <p class="text-[13px] leading-relaxed" style="color:#93c5fd;">
-                {{ area }}
+              <p class="text-[13px] font-semibold leading-relaxed" style="color:#93c5fd;">
+                {{ getAreaTitle(area) }}
               </p>
+              <p v-if="getAreaDescription(area)" class="text-[12px] mt-1 leading-relaxed" style="color:rgba(147,197,253,0.7);">
+                {{ getAreaDescription(area) }}
+              </p>
+              <div v-if="getAreaSuggestions(area)?.length" class="mt-2">
+                <span class="text-[11px] font-semibold" style="color:#fbbf24;">Gợi ý: </span>
+                <span v-for="(sug, si) in getAreaSuggestions(area)" :key="si"
+                  class="text-[11px] ml-1" style="color:rgba(251,191,36,0.8);">
+                  {{ si > 0 ? '• ' : '' }}{{ sug }}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -176,52 +368,106 @@
         <!-- Tab content: Recommendation -->
         <div v-else-if="activeDetailTab === 'recommendation'">
           <h4 class="text-sm font-bold text-white mb-3">Khuyến nghị</h4>
-          <div class="px-4 py-3 rounded-lg"
+          <!-- Render structured recommendation -->
+          <div v-if="getRecommendationText()" class="space-y-3">
+            <div class="px-4 py-3 rounded-lg"
+              style="background:rgba(168,85,247,0.1); border:1px solid rgba(168,85,247,0.2);">
+              <p class="text-[13px] leading-relaxed font-semibold" style="color:#d8b4fe;">
+                {{ getRecommendationText() }}
+              </p>
+            </div>
+            <!-- Action items -->
+            <div v-if="getRecommendationActionItems()?.length">
+              <p class="text-xs font-bold mb-2" style="color:rgba(255,255,255,0.5);">Hành động cần thiết:</p>
+              <div class="space-y-1">
+                <div v-for="(item, idx) in getRecommendationActionItems()" :key="idx"
+                  class="flex items-start gap-2 px-3 py-2 rounded-lg"
+                  style="background:rgba(168,85,247,0.06); border:1px solid rgba(168,85,247,0.12);">
+                  <span class="flex-shrink-0 text-[14px]">•</span>
+                  <span class="text-[12px] leading-relaxed" style="color:rgba(216,180,254,0.85);">{{ item }}</span>
+                </div>
+              </div>
+            </div>
+            <!-- Interview tips -->
+            <div v-if="getRecommendationTips()?.length">
+              <p class="text-xs font-bold mb-2 mt-3" style="color:rgba(255,255,255,0.5);">Mẹo phỏng vấn:</p>
+              <div class="space-y-1">
+                <div v-for="(tip, idx) in getRecommendationTips()" :key="idx"
+                  class="flex items-start gap-2 px-3 py-2 rounded-lg"
+                  style="background:rgba(251,191,36,0.06); border:1px solid rgba(251,191,36,0.12);">
+                  <span class="flex-shrink-0 text-[14px]" style="color:#fbbf24;">→</span>
+                  <span class="text-[12px] leading-relaxed" style="color:rgba(251,191,36,0.85);">{{ tip }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Fallback: plain string -->
+          <div v-else-if="typeof analysisData.recommendation === 'string' && analysisData.recommendation"
+            class="px-4 py-3 rounded-lg"
             style="background:rgba(168,85,247,0.1); border:1px solid rgba(168,85,247,0.2);">
             <p class="text-[13px] leading-relaxed" style="color:#d8b4fe;">
               {{ analysisData.recommendation }}
             </p>
           </div>
-        </div>
-
-        <!-- Matched Skills Summary -->
-        <div>
-          <h4 class="text-sm font-bold text-white mb-3">Kỹ năng phù hợp ({{ analysisData.matched_skills.length }})
-          </h4>
-          <div class="flex flex-wrap gap-2" v-if="!isMoreSkills">
-            <span v-for="(skill, idx) in analysisData.matched_skills.slice(0, 8)" :key="`matched-${idx}`"
-              class="px-3 py-1.5 rounded-full text-[11px] font-semibold"
-              style="background:rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.25);">
-              {{ skill }}
-            </span>
-            <span v-if="analysisData.matched_skills.length > 8"
-              class="px-3 py-1.5 rounded-full text-[11px] font-semibold cursor-pointer"
-              style="background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.5);" @click="isMoreSkills = true">
-              +{{ analysisData.matched_skills.length - 8 }} thêm
-            </span>
-          </div>
-          <div class="flex flex-wrap gap-2" v-else>
-            <span v-for="(skill, idx) in analysisData.matched_skills" :key="`matched-${idx}`"
-              class="px-3 py-1.5 rounded-full text-[11px] font-semibold"
-              style="background:rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.25);">
-              {{ skill }}
-            </span>
-            <span class="px-3 py-1.5 rounded-full text-[11px] font-semibold cursor-pointer"
-              style="background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.5);" @click="isMoreSkills = false">
-              - ẩn
-            </span>
+          <div v-else class="text-center py-4" style="color:rgba(255,255,255,0.4);">
+            Không có khuyến nghị.
           </div>
         </div>
 
-        <!-- Experience Assessment -->
-        <div class="rounded-lg p-4" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08);">
-          <h4 class="text-sm font-bold text-white mb-2">Đánh giá kinh nghiệm</h4>
-          <p class="text-[13px] mb-2" style="color:rgba(255,255,255,0.7);">
-            <span class="font-semibold">{{ analysisData.experience_assessment }}</span>
-          </p>
-          <p class="text-[12px]" style="color:rgba(255,255,255,0.5);">
-            {{ analysisData.experience_detail }}
-          </p>
+        <!-- Tab content: Kinh nghiệm -->
+        <div v-else-if="activeDetailTab === 'experience'">
+          <h4 class="text-sm font-bold text-white mb-4">Đánh giá kinh nghiệm</h4>
+
+          <!-- Metrics grid -->
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <div class="rounded-lg p-3" style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);">
+              <p class="text-[11px] mb-1" style="color:rgba(255,255,255,0.4);">Điểm kinh nghiệm</p>
+              <p class="text-xl font-black" style="color:#60a5fa;">{{ getExpDetailMetric('score') }}/50</p>
+            </div>
+            <div class="rounded-lg p-3" style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);">
+              <p class="text-[11px] mb-1" style="color:rgba(255,255,255,0.4);">Điểm JD yêu cầu</p>
+              <p class="text-xl font-black" style="color:#a78bfa;">{{ getExpDetailMetric('jd_level') }}</p>
+            </div>
+            <div class="rounded-lg p-3" style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);">
+              <p class="text-[11px] mb-1" style="color:rgba(255,255,255,0.4);">Relevance</p>
+              <p class="text-xl font-black" style="color:#4ade80;">{{ getExpDetailMetric('project_relevance') }}</p>
+            </div>
+            <div class="rounded-lg p-3" style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);">
+              <p class="text-[11px] mb-1" style="color:rgba(255,255,255,0.4);">Bonus</p>
+              <p class="text-xl font-black" style="color:#fbbf24;">{{ getExpDetailMetric('bonus') }}</p>
+            </div>
+          </div>
+
+          <!-- Assessment summary -->
+          <div class="rounded-lg p-4 mb-4" style="background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.15);">
+            <p class="text-[13px] leading-relaxed" style="color:rgba(255,255,255,0.8);">
+              {{ getExpDetailSummary() }}
+            </p>
+          </div>
+
+          <!-- Years breakdown -->
+          <div v-if="getExpDetailYears()" class="rounded-lg p-3 mb-4"
+            style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06);">
+            <p class="text-[12px] leading-relaxed" style="color:rgba(255,255,255,0.6);">
+              {{ getExpDetailYears() }}
+            </p>
+          </div>
+
+          <!-- Projects list -->
+          <div v-if="getExpDetailProjects()?.length">
+            <h5 class="text-xs font-semibold mb-2" style="color:rgba(255,255,255,0.5);">Dự án</h5>
+            <div class="space-y-2">
+              <div v-for="(project, idx) in getExpDetailProjects()" :key="idx"
+                class="flex items-start gap-2 rounded-lg px-3 py-2"
+                style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06);">
+                <span class="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+                  style="background:rgba(59,130,246,0.2); color:#60a5fa;">
+                  {{ idx + 1 }}
+                </span>
+                <span class="text-[12px] text-white">{{ project }}</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Reset button -->
@@ -232,6 +478,8 @@
           </button>
         </div>
       </div>
+
+      <!-- Reset button -->
     </div>
   </div>
 </template>
@@ -273,13 +521,203 @@ const isAnalyzing = ref(false)
 const analysisCompleted = ref(false)
 const isMoreSkills = ref(false)
 const analysisData = ref(null)
-const activeDetailTab = ref('missing')
+const analysisSessionId = ref(null)
+const activeDetailTab = ref('tongquan')
 const analysisProgress = ref(0)
+const expandedSkill = ref(null) // { type: 'matched'|'related'|'missing', index: number }
+
+function toggleSkillDetail(type, index) {
+  if (expandedSkill.value?.type === type && expandedSkill.value?.index === index) {
+    expandedSkill.value = null
+  } else {
+    expandedSkill.value = { type, index }
+  }
+}
+
+function getExpandedSkill() {
+  if (!expandedSkill.value || !analysisData.value?.skills_detail) return null
+  const { type, index } = expandedSkill.value
+  return analysisData.value.skills_detail[type]?.[index] || null
+}
+
+function getMetricValue(text, key) {
+  if (!text) return '—'
+  const patterns = {
+    years_score: /years_score[=:]?\s*([\d.]+)/i,
+    seniority: /seniority[=:]?\s*([\d.]+)/i,
+    project_relevance: /Avg\s+project\s+relevance[=:]?\s*([\d.]+)/i,
+    bonus: /bonus[=:]?\s*([\d.]+)/i
+  }
+  const match = text.match(patterns[key])
+  return match ? match[1] : '—'
+}
+
+function getExperienceLevel(text) {
+  if (!text) return 'Không xác định'
+  const lower = text.toLowerCase()
+  if (lower.includes('fresher') || lower.includes('sinh viên')) return '🎓 Fresher / Sinh viên'
+  if (lower.includes('junior')) return '💼 Junior'
+  if (lower.includes('senior')) return '⭐ Senior'
+  if (lower.includes('lead') || lower.includes('manager')) return '👔 Lead / Manager'
+  return '💼 Nhân viên'
+}
+
+function getExperienceBadgeStyle(text) {
+  if (!text) return { background: 'rgba(255,255,255,0.1)', color: '#aaa' }
+  const lower = text.toLowerCase()
+  if (lower.includes('senior') || lower.includes('lead') || lower.includes('manager')) {
+    return { background: 'rgba(251,191,36,0.2)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.4)' }
+  }
+  if (lower.includes('junior')) {
+    return { background: 'rgba(59,130,246,0.2)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.4)' }
+  }
+  if (lower.includes('fresher') || lower.includes('sinh viên')) {
+    return { background: 'rgba(34,197,94,0.2)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.4)' }
+  }
+  return { background: 'rgba(255,255,255,0.1)', color: '#aaa', border: '1px solid rgba(255,255,255,0.2)' }
+}
+
+function getProjects(text) {
+  if (!text) return []
+  const match = text.match(/Projects?:\s*\[(.*?)\]/i)
+  if (!match) return []
+  return match[1].split(',').map(p => p.trim().replace(/^["']|["']$/g, '')).filter(p => p)
+}
+
+// ── Strength helpers ──────────────────────────────────────────────────────────────────
+function getStrengthText(strength) {
+  if (!strength) return ''
+  if (typeof strength === 'string') return strength
+  return strength.title || strength.text || strength.description || ''
+}
+
+function getStrengthDescription(strength) {
+  if (!strength) return ''
+  if (typeof strength === 'string') return ''
+  return strength.description || ''
+}
+
+// ── Area helpers ───────────────────────────────────────────────────────────────────
+function getAreaTitle(area) {
+  if (!area) return ''
+  if (typeof area === 'string') return area
+  return area.title || area.text || ''
+}
+
+function getAreaDescription(area) {
+  if (!area) return ''
+  if (typeof area === 'string') return ''
+  return area.description || ''
+}
+
+function getAreaSuggestions(area) {
+  if (!area) return []
+  if (typeof area === 'string') return []
+  return area.suggestions || []
+}
+
+// ── Recommendation helpers ─────────────────────────────────────────────────────────
+function getRecommendationText() {
+  const rec = analysisData.value?.recommendation
+  if (!rec) return ''
+  if (typeof rec === 'string') return rec
+  return rec.text || rec.summary || ''
+}
+
+function getRecommendationActionItems() {
+  const rec = analysisData.value?.recommendation
+  if (!rec || typeof rec === 'string') return []
+  return rec.action_items || []
+}
+
+function getRecommendationTips() {
+  const rec = analysisData.value?.recommendation
+  if (!rec || typeof rec === 'string') return []
+  return rec.interview_tips || []
+}
+
+// ── Experience detail helpers ───────────────────────────────────────────────────────
+function getExpDetailLevel() {
+  const detail = analysisData.value?.experience_detail
+  if (!detail) return 'Không xác định'
+  if (typeof detail === 'string') return getExperienceLevel(detail)
+  const cvLevel = detail.cv_level || ''
+  if (cvLevel) {
+    const lower = cvLevel.toLowerCase()
+    if (lower.includes('fresher') || lower.includes('sinh viên')) return 'Fresher / Sinh viên'
+    if (lower.includes('junior')) return 'Junior'
+    if (lower.includes('senior')) return 'Senior'
+    if (lower.includes('lead') || lower.includes('manager')) return 'Lead / Manager'
+    return cvLevel
+  }
+  return 'Nhân viên'
+}
+
+function getExpDetailBadgeStyle() {
+  const level = getExpDetailLevel()
+  if (level.includes('Senior') || level.includes('Lead')) {
+    return { background: 'rgba(251,191,36,0.2)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.4)' }
+  }
+  if (level.includes('Junior')) {
+    return { background: 'rgba(59,130,246,0.2)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.4)' }
+  }
+  if (level.includes('Fresher')) {
+    return { background: 'rgba(34,197,94,0.2)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.4)' }
+  }
+  return { background: 'rgba(255,255,255,0.1)', color: '#aaa', border: '1px solid rgba(255,255,255,0.2)' }
+}
+
+function getExpDetailMetric(metric) {
+  const detail = analysisData.value?.experience_detail
+  if (!detail) return metric === 'score' ? 0 : '—'
+  if (typeof detail === 'string') {
+    if (metric === 'score') return getMetricValue(detail, 'years_score') || 0
+    if (metric === 'seniority') return getMetricValue(detail, 'seniority') || '—'
+    if (metric === 'project_relevance') return getMetricValue(detail, 'project_relevance') || '—'
+    if (metric === 'bonus') return getMetricValue(detail, 'bonus') || '—'
+    if (metric === 'jd_level') return '—'
+    return '—'
+  }
+  if (metric === 'score') return detail.score || 0
+  if (metric === 'jd_level') return detail.jd_required_level || '—'
+  if (metric === 'project_relevance') {
+    const avg = detail.project_relevance_avg
+    return avg ? `${(avg * 100).toFixed(0)}%` : '—'
+  }
+  if (metric === 'bonus') return detail.bonus_val || 0
+  return '—'
+}
+
+function getExpDetailSummary() {
+  const detail = analysisData.value?.experience_detail
+  if (!detail) return 'Không có dữ liệu.'
+  if (typeof detail === 'string') return detail
+  return detail.summary || 'Không có mô tả.'
+}
+
+function getExpDetailYears() {
+  const detail = analysisData.value?.experience_detail
+  if (!detail || typeof detail === 'string') return ''
+  const yd = detail.years_detail
+  if (!yd || Object.keys(yd).length === 0) return ''
+  const total = yd.total_years || 0
+  const work = yd.work_years || 0
+  const proj = yd.project_years || 0
+  return `${total.toFixed(1)} năm kinh nghiệm tổng (${work.toFixed(1)}y làm việc, ${proj.toFixed(1)}y dự án)`
+}
+
+function getExpDetailProjects() {
+  const detail = analysisData.value?.experience_detail
+  if (!detail) return []
+  if (typeof detail === 'string') return getProjects(detail)
+  return detail.projects || []
+}
 
 const detailTabs = [
-  { id: 'missing', label: 'Kỹ năng thiếu' },
+  { id: 'tongquan', label: 'Tổng quát' },
   { id: 'strengths', label: 'Điểm mạnh' },
   { id: 'development', label: 'Phát triển' },
+  { id: 'experience', label: 'Kinh nghiệm' },
   { id: 'recommendation', label: 'Khuyến nghị' }
 ]
 
@@ -307,17 +745,6 @@ function getScoreColor(score) {
     return { main: '#f87171', start: '#fb7185', end: '#dc2626' }
   }
 }
-
-const detailedScoresList = computed(() => {
-  if (!analysisData.value || !analysisData.value.detailed_scores) return [];
-  const scores = analysisData.value.detailed_scores;
-  return [
-    { label: 'Kinh nghiệm', score: scores.experience_score || 0, max: 50, color: '#4ade80' },
-    { label: 'Kỹ năng', score: scores.skills_score || 0, max: 30, color: '#3b82f6' },
-    { label: 'Học vấn', score: scores.education_score || 0, max: 10, color: '#f59e0b' },
-    { label: 'Độ khớp công ty', score: scores.company_fit_score || 0, max: 10, color: '#a855f7' }
-  ];
-})
 
 function getScoreLabel(score) {
   if (score >= 85) return 'Rất phù hợp'
@@ -371,9 +798,17 @@ async function startAnalysis() {
 
     if (response.data.success) {
       analysisData.value = response.data.data
+      analysisSessionId.value = response.data.data?.session_id || null
       analysisCompleted.value = true
-      activeDetailTab.value = 'missing'
+      activeDetailTab.value = 'tongquan'
       ElMessage.success('Phân tích hoàn thành')
+      console.log('[AnalysisPanel] Analysis complete', {
+        sessionId: analysisSessionId.value,
+        hasSkillsDetail: !!response.data.data?.skills_detail,
+        matchedCount: response.data.data?.skills_detail?.matched?.length,
+        relatedCount: response.data.data?.skills_detail?.related?.length,
+        missingCount: response.data.data?.skills_detail?.missing?.length,
+      })
     } else {
       throw new Error(response.data.message || 'Phân tích thất bại')
     }
@@ -395,7 +830,9 @@ async function startAnalysis() {
 function resetAnalysis() {
   analysisCompleted.value = false
   analysisData.value = null
-  activeDetailTab.value = 'missing'
+  analysisSessionId.value = null
+  activeDetailTab.value = 'tongquan'
+  expandedSkill.value = null
 }
 </script>
 
