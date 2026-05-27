@@ -33,13 +33,14 @@
             <div class="pt-4 pb-1 px-1">
                 <div class="text-[10px] font-bold uppercase tracking-widest mb-3" style="color:rgba(255,255,255,0.25);">
                     Phiên gần đây</div>
-                <div v-for="s in recentSessions" :key="s.title"
+                <div v-for="s in recentSessions" :key="s.id"
                     class="flex items-center gap-2.5 px-2 py-2 rounded-lg cursor-pointer group transition-colors duration-150"
                     style="color:rgba(255,255,255,0.5);"
                     @mouseenter="$event.currentTarget.style.color = 'rgba(255,255,255,0.8)'"
                     @mouseleave="$event.currentTarget.style.color = 'rgba(255,255,255,0.5)'">
-                    <span class="w-2 h-2 rounded-full flex-shrink-0" :style="{ background: s.color }" />
-                    <span class="text-[12.5px] truncate">{{ s.title }}</span>
+                    <span class="w-2 h-2 rounded-full flex-shrink-0"
+                        :style="{ background: getStatusSession(s.status) }" />
+                    <span @click="handleSessionClick(s)" class="text-[12.5px] truncate">{{ s.job_position }}</span>
                 </div>
             </div>
         </nav>
@@ -51,7 +52,7 @@
             <div class="flex-1 min-w-0">
                 <div class="text-[12.5px] font-semibold text-white truncate">{{ auth.userName }}</div>
                 <div class="text-[10.5px] truncate" style="color:rgba(255,255,255,0.38);">{{ auth.user?.email || 'Khách'
-                }}</div>
+                    }}</div>
             </div>
             <button @click="handleLogout"
                 class="w-7 h-7 flex items-center justify-center rounded-lg transition-colors hover:bg-white/10"
@@ -66,12 +67,16 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRoute, useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 const route = useRoute()
+
+const authStore = useAuthStore()
+
 
 // ── Navigation ───────────────────────────────────────────────────────────────
 const navItems = ref([
@@ -91,6 +96,7 @@ const navItems = ref([
     },
     {
         label: 'Báo cáo', active: false,
+        path: '/analysis-reports',
         icon: `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/></svg>`,
     },
 ])
@@ -109,10 +115,46 @@ function isActiveNav(item) {
     return item.active
 }
 
-const recentSessions = [
-    { title: 'Vị trí PM Cấp cao', color: '#4ade80' },
-    { title: 'Trưởng nhóm UX tại Google', color: '#fbbf24' },
-]
+const recentSessions = ref([])
+
+async function apiRequest(path, options = {}) {
+    return authStore.authorizedRequest(path, options)
+}
+
+const getStatusSession = (status) => {
+    if (status === 'completed') {
+        return '#4ade80'
+    }
+    if (status === 'active') {
+        return '#fbbf24'
+    }
+    else {
+        return '#f43f5e'
+    }
+}
+
+async function fetchHistory() {
+    try {
+        const url = `/api/v1/conversations/`
+
+        const response = await apiRequest(url)
+
+        recentSessions.value = (response.items || []).slice(0, 3)
+    } catch (err) {
+        console.log('Error status:', err.status)
+        console.log('Error message:', err.message)
+        console.log('Error data:', err.data)  // payload BE trả về
+        ElMessage.error(err.message || 'Không thể tải lịch sử phỏng vấn')
+    }
+}
+
+const handleSessionClick = (s) => {
+    router.push(`/interview/${s.session_id}`)
+}
+
+onMounted(() => {
+    fetchHistory()
+})
 
 // Auth store
 const auth = useAuthStore();

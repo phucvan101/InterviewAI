@@ -61,8 +61,8 @@ const mobileMenuOpen = ref(false)
 
 const navLinks = [
     { to: "/", label: "Cách hoạt động" },
-    { to: "/webrtc", label: "Tính năng" },
+    // { to: "/webrtc", label: "Tính năng" },
     { to: "/speech", label: "Bảng giá" },
-    { to: "/about", label: "Giới thiệu" },
+    // { to: "/about", label: "Giới thiệu" },
 ]
 </script>
