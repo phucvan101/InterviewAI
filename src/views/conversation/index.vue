@@ -22,7 +22,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useScroll, useSpeechRecognition } from '@vueuse/core'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElNotification } from 'element-plus'
 
 import LayoutInterview from '../layouts/LayoutInterview.vue'
 import InterviewHistory from './InterviewHistory.vue'
@@ -256,18 +256,29 @@ async function sendAnswer(answer) {
 
 async function endInterview() {
     if (isEnded.value) return
+
     isEnding.value = true
     try {
-        const response = await apiRequest(
-            `/api/v1/conversations/${sessionId.value}/end`,
-            { method: 'POST' }
-        )
+        const response = await apiRequest(`/api/v1/conversations/${sessionId.value}/analysis-report`, {
+            method: 'POST',
+        })
         const payload = response?.data || response || {}
         result.value = payload
         score.value = payload.score
         status.value = payload.status || 'completed'
-        if (clock) { window.clearInterval(clock); clock = null }
-        ElMessage.success('Đã kết thúc phỏng vấn')
+
+        // ✅ Dừng đồng hồ
+        if (clock) {
+            window.clearInterval(clock)
+            clock = null
+        }
+
+        ElNotification.success({
+            title: 'Kết quả phỏng vấn',
+        })
+
+        router.push(`/analysis-reports/${sessionId.value}`)
+
     } catch (err) {
         ElMessage.error(err.message || 'Không thể kết thúc phỏng vấn')
     } finally {
