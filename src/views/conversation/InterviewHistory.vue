@@ -40,7 +40,7 @@
         <div v-else class="history-list">
             <Motion v-for="item in items" :key="getSessionId(item)" :initial="{ opacity: 0, y: 12 }"
                 :animate="{ opacity: 1, y: 0 }" :transition="{ duration: 0.22 }">
-                <button class="history-row" @click="$emit('open', item)">
+                <div class="history-row" @click="$emit('open', item)">
                     <div>
                         <div class="flex items-center gap-2">
                             <div class="font-bold text-[oklch(58.5%_0.233_277.117)]">{{ item?.job_position }}</div>
@@ -67,7 +67,7 @@
                     </button>
 
                     <!-- <ChevronRight :size="18" /> -->
-                </button>
+                </div>
             </Motion>
         </div>
 
