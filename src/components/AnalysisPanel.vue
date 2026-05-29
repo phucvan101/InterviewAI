@@ -225,7 +225,7 @@
 import { ref, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import axios from 'axios'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElNotification } from 'element-plus'
 
 const authStore = useAuthStore()
 
@@ -250,8 +250,14 @@ const props = defineProps({
   companyFilePath: {
     type: String,
     default: null
+  },
+  session_id: {
+    type: Number,
+    default: null
   }
 })
+
+const emit = defineEmits(['analysis-complete', 'analysis-reset'])
 
 // State
 const isAnalyzing = ref(false)
@@ -347,7 +353,30 @@ async function startAnalysis() {
       analysisData.value = response.data.data
       analysisCompleted.value = true
       activeDetailTab.value = 'missing'
-      ElMessage.success('Phân tích hoàn thành')
+
+      if (analysisData.value.overall_score >= 85) {
+        ElNotification.success({
+          title: 'Phân tích hoàn thành',
+          message: `CV của bạn được đánh giá ${analysisData.value.overall_score}/100 phù hợp với công việc.`,
+          duration: 5000
+        })
+      } else if (analysisData.value.overall_score >= 30) {
+        ElNotification.warning({
+          title: 'Cần cải thiện',
+          message: `CV của bạn cần cải thiện ${analysisData.value.overall_score}/100 để phù hợp với công việc. Hoặc tải lại CV hoặc mô tả công việc cho phù hợp.`,
+          duration: 5000
+        })
+      } else {
+        ElNotification.error({
+          title: 'Cần cải thiện nhiều',
+          message: `CV của bạn cần cải thiện ${analysisData.value.overall_score}/100 để phù hợp với công việc. Hoặc tải lại CV hoặc mô tả công việc cho phù hợp.`,
+          duration: 5000
+        })
+      }
+      emit('analysis-complete', {
+        session_id: response.data.session_id,
+        analysis: response.data
+      })
     } else {
       throw new Error(response.data.message || 'Phân tích thất bại')
     }
@@ -370,6 +399,7 @@ function resetAnalysis() {
   analysisCompleted.value = false
   analysisData.value = null
   activeDetailTab.value = 'missing'
+  emit('analysis-reset')
 }
 </script>
 
