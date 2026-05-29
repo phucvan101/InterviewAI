@@ -4,8 +4,9 @@
             <!-- ── History mode ─────────────────────────────────────────── -->
             <InterviewHistory v-if="isHistoryMode" :items="historyItems" :is-loading="isHistoryLoading" :page="page"
                 :page-size="pageSize" :total="historyTotal" :total-pages="historyTotalPages" :status="historyStatus"
-                @refresh="fetchHistory" @open="openSession" @goto="goToHistoryPage" @reset="resetHistoryPage"
-                @update:status="historyStatus = $event" @update:page-size="pageSize = $event" />
+                @refresh="fetchHistory" @open="openSession" @goto="goToHistoryPage" @delete="deleteSession"
+                @reset="resetHistoryPage" @update:status="historyStatus = $event" @update:page-size="pageSize = $event"
+                @update:search="searchQuery = $event" />
 
             <!-- ── Chat / live interview mode ────────────────────────────── -->
             <InterviewChat v-else :title="conversationTitle" :messages="normalizedMessages" :result="result"
@@ -51,6 +52,7 @@ const now = ref(Date.now())
 // ─── History state ────────────────────────────────────────────────────────────
 const historyItems = ref([])
 const historyStatus = ref('')
+const searchQuery = ref('')
 const isHistoryLoading = ref(false)
 const page = ref(1)
 const pageSize = ref(10)
@@ -154,6 +156,7 @@ async function fetchHistory() {
             page_size: String(pageSize.value),
         })
         if (historyStatus.value) params.set('status', historyStatus.value)
+        if (searchQuery.value) params.set('job_position', searchQuery.value)
 
         const response = await apiRequest(`/api/v1/conversations/?${params.toString()}`)
         const payload = extractListPayload(response)
@@ -172,6 +175,18 @@ async function fetchHistory() {
         ElMessage.error(err.message || 'Không thể tải lịch sử phỏng vấn')
     } finally {
         isHistoryLoading.value = false
+    }
+}
+
+const deleteSession = async (item) => {
+    const id = item.id
+    if (!id) return
+    try {
+        await apiRequest(`/api/v1/conversations/${id}`, { method: 'DELETE' })
+        ElNotification.success({ title: `Đã xóa phiên phỏng vấn thành công vị trí ${item.job_position}` })
+        fetchHistory()
+    } catch (err) {
+        ElMessage.error(err.message || 'Không thể xóa phiên phỏng vấn')
     }
 }
 
@@ -205,7 +220,7 @@ async function fetchSession() {
         messages.value = payload.messages || []
         startedAt.value = payload.created_at ? new Date(payload.created_at).getTime() : Date.now()
         if (isEnded.value) {
-            result.value = payload.result || {
+            result.value = payload || {
                 score: payload.score,
                 total_messages: messages.value.length,
                 status: payload.status,

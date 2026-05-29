@@ -75,25 +75,23 @@
 
                 <!-- Result panel -->
                 <section v-if="result" class="result-panel">
-                    <div>
-                        <p class="eyebrow">Kết quả</p>
-                        <h2>{{ result.score ?? '--' }} điểm</h2>
-                        <p>{{ 'Buổi phỏng vấn đã hoàn tất.' }}</p>
-                        <p>{{ result.result?.comments }}</p>
-                    </div>
-                    <div class="result-grid">
-                        <div>
-                            <strong>Điểm mạnh</strong>
-                            <span>{{ listResult(result.result?.strengths) }}</span>
+                    <div class="result-header">
+                        <div class="result-score-block">
+                            <p class="eyebrow">Kết quả phỏng vấn</p>
+                            <div class="result-score-row">
+                                <h2>{{ result.score ?? '--' }}</h2>
+                                <span class="score-unit">/ 100 điểm</span>
+                            </div>
+                            <p class="result-sub">Buổi phỏng vấn đã hoàn tất.</p>
+                            <p v-if="result.result?.comments" class="result-comment">
+                                {{ result.result.comments }}
+                            </p>
                         </div>
-                        <div>
-                            <strong>Cần cải thiện</strong>
-                            <span class="whitespace-pre-line">{{ listResult(result.result?.weaknesses) }}</span>
-                        </div>
-                        <div>
-                            <strong>Tổng tin nhắn</strong>
-                            <span>{{ result.total_messages }}</span>
-                        </div>
+
+                        <RouterLink :to="`/analysis-reports/${result.session_id}`" class="report-link">
+                            <span>Xem báo cáo chi tiết</span>
+                            <i class="ti ti-arrow-right" />
+                        </RouterLink>
                     </div>
                 </section>
             </main>
@@ -540,60 +538,102 @@ button:not(:disabled):hover {
     font-weight: 900;
 }
 
-.eyebrow {
-    margin: 0 0 3px;
-    color: #94a3b8;
-    font-size: 12px;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-}
-
 .result-panel {
     margin-top: 28px;
-    padding: 24px;
+    padding: 24px 28px;
     border-radius: 18px;
     background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.92));
-    border: 1px solid rgba(96, 165, 250, 0.22);
+    border: 1px solid rgba(96, 165, 250, 0.18);
+}
+
+.result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.result-score-block {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.result-score-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
 }
 
 .result-panel h2 {
-    margin: 4px 0;
-    font-size: 44px;
+    margin: 0;
+    font-size: 48px;
     font-weight: 900;
     color: #93c5fd;
+    line-height: 1;
 }
 
-.result-panel p {
-    color: #cbd5e1;
+.score-unit {
+    font-size: 15px;
+    font-weight: 600;
+    color: #64748b;
 }
 
-.result-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
-    margin-top: 18px;
-}
-
-.result-grid div {
-    padding: 14px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.04);
-}
-
-.result-grid strong,
-.result-grid span {
-    display: block;
-}
-
-.result-grid strong {
-    margin-bottom: 8px;
-    color: #fff;
-}
-
-.result-grid span {
+.result-sub {
+    margin: 0;
     color: #94a3b8;
-    line-height: 1.45;
+    font-size: 13px;
+}
+
+.result-comment {
+    margin: 0;
+    color: #cbd5e1;
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 480px;
+}
+
+.report-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 12px;
+    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    color: #a5b4fc;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: 150ms ease;
+    flex-shrink: 0;
+}
+
+.report-link:hover {
+    background: rgba(99, 102, 241, 0.22);
+    border-color: rgba(99, 102, 241, 0.6);
+    color: #c7d2fe;
+    transform: translateX(2px);
+}
+
+.report-link .ti {
+    font-size: 16px;
+    transition: transform 150ms ease;
+}
+
+.report-link:hover .ti {
+    transform: translateX(3px);
+}
+
+.eyebrow {
+    margin: 0 0 6px;
+    color: #94a3b8;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
 }
 
 @keyframes typing {

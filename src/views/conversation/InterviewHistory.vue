@@ -11,6 +11,9 @@
         </header>
 
         <div class="history-filters">
+            <input class="field" v-model="searchQuery" placeholder="Tìm kiếm theo vị trí"
+                @keyup.enter="$emit('update:search', searchQuery); $emit('reset')"></input>
+
             <select v-model="localStatus" class="field" @change="$emit('update:status', localStatus); $emit('reset')">
                 <option value="">Tất cả trạng thái</option>
                 <option value="active">Đang phỏng vấn</option>
@@ -58,10 +61,41 @@
                             {{ item?.score ?? '--' }}
                         </div>
                     </div>
-                    <ChevronRight :size="18" />
+
+                    <button class="delete-button" title="Xóa phiên" @click.stop="handleDeleteClick(item, $event)">
+                        <Trash2 :size="15" />
+                    </button>
+
+                    <!-- <ChevronRight :size="18" /> -->
                 </button>
             </Motion>
         </div>
+
+        <Teleport to="body">
+            <Transition name="fade">
+                <div v-if="showDeleteDialog" class="delete-overlay" @click.self="showDeleteDialog = false">
+                    <div class="delete-dialog">
+                        <div class="delete-dialog-icon">
+                            <Trash2 :size="22" />
+                        </div>
+                        <h3>Xóa phiên phỏng vấn?</h3>
+                        <p>Bạn sắp xóa phiên cho vị trí</p>
+                        <strong>{{ deleteTarget?.job_position }}{{ deleteTarget?.company_name ? ` tại
+                            ${deleteTarget.company_name}` : '' }}</strong>
+                        <div class="delete-warn">
+                            <AlertTriangle :size="14" />
+                            Báo cáo phân tích và toàn bộ tin nhắn cũng sẽ bị xóa vĩnh viễn.
+                        </div>
+                        <div class="delete-actions">
+                            <button class="btn-cancel" @click="showDeleteDialog = false">Hủy</button>
+                            <button class="btn-confirm" @click="confirmDelete">
+                                <Trash2 :size="14" /> Xóa vĩnh viễn
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </Transition>
+        </Teleport>
 
         <footer v-if="total > 0" class="history-pagination">
             <div class="pagination-summary">
@@ -87,7 +121,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { Motion } from 'motion-v'
-import { Brain, ChevronLeft, ChevronRight, History, RefreshCw } from 'lucide-vue-next'
+import { Brain, ChevronLeft, ChevronRight, History, RefreshCw, Trash2 } from 'lucide-vue-next'
 
 // ─── Props ───────────────────────────────────────────────────────────────────
 const props = defineProps({
@@ -98,14 +132,16 @@ const props = defineProps({
     total: { type: Number, default: 0 },
     totalPages: { type: Number, default: 1 },
     status: { type: String, default: '' },
+    searchQuery: { type: String, default: '' }
 })
 
 // ─── Emits ────────────────────────────────────────────────────────────────────
-defineEmits(['refresh', 'open', 'goto', 'reset', 'update:status', 'update:pageSize'])
+const emit = defineEmits(['refresh', 'open', 'goto', 'reset', 'update:status', 'update:pageSize', 'update:search', 'delete'])
 
 // ─── Local mirrors for v-model selects ───────────────────────────────────────
 const localStatus = ref(props.status)
 const localPageSize = ref(props.pageSize)
+const searchQuery = ref(props.searchQuery)
 
 watch(() => props.status, (v) => { localStatus.value = v })
 watch(() => props.pageSize, (v) => { localPageSize.value = v })
@@ -154,6 +190,23 @@ function formatDate(value) {
         dateStyle: 'medium',
         timeStyle: 'short',
     }).format(new Date(value))
+}
+
+const deleteTarget = ref(null) // item đang chờ xóa
+const showDeleteDialog = ref(false)
+
+function handleDeleteClick(item, event) {
+    event.stopPropagation() // tránh trigger @click của row
+    deleteTarget.value = item
+    showDeleteDialog.value = true
+}
+
+function confirmDelete() {
+    if (!deleteTarget.value) return
+    console.log('deleteTarget:', deleteTarget.value)
+    emit('delete', deleteTarget.value)
+    showDeleteDialog.value = false
+    deleteTarget.value = null
 }
 </script>
 
@@ -211,6 +264,7 @@ button:not(:disabled):hover {
 
 .history-filters {
     display: flex;
+    align-items: center;
     gap: 12px;
     padding: 22px 28px 0;
 }
@@ -365,6 +419,61 @@ button:not(:disabled):hover {
     opacity: 0.45;
 }
 
+.delete-button {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    border: 1px solid rgba(239, 68, 68, 0.15);
+    background: rgba(239, 68, 68, 0.06);
+    color: #f87171;
+    transition: 140ms ease;
+    flex-shrink: 0;
+}
+
+.delete-button:hover {
+    border-color: rgba(239, 68, 68, 0.5);
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    transform: scale(1.05);
+}
+
+.delete-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.delete-dialog {
+    background: #111827;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 28px;
+    width: 360px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ... thêm style cho icon, warn, actions tương tự preview */
+
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 200ms ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}
+
 @media (max-width: 900px) {
     .history-row {
         grid-template-columns: 1fr;
@@ -382,5 +491,138 @@ button:not(:disabled):hover {
     .pagination-controls {
         flex-wrap: wrap;
     }
+}
+</style>
+
+<style>
+/* Không scoped — global */
+.delete-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.delete-dialog {
+    background: #111827;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 28px 24px;
+    width: 380px;
+    max-width: 90vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    text-align: center;
+}
+
+.delete-dialog-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #f87171;
+    margin-bottom: 16px;
+}
+
+.delete-dialog h3 {
+    color: #fff;
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.delete-dialog p {
+    color: #64748b;
+    font-size: 13px;
+    margin-bottom: 4px;
+}
+
+.delete-dialog strong {
+    color: #818cf8;
+    font-size: 14px;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 16px;
+}
+
+.delete-warn {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 14px;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.15);
+    border-radius: 10px;
+    color: #fca5a5;
+    font-size: 12px;
+    text-align: left;
+    line-height: 1.5;
+    width: 100%;
+    margin-bottom: 24px;
+}
+
+.delete-actions {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
+.delete-actions .btn-cancel {
+    flex: 1;
+    height: 42px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    color: #94a3b8;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 140ms;
+}
+
+.delete-actions .btn-cancel:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.delete-actions .btn-confirm {
+    flex: 1;
+    height: 42px;
+    border-radius: 12px;
+    border: none;
+    background: #dc2626;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: 140ms;
+}
+
+.delete-actions .btn-confirm:hover {
+    background: #ef4444;
+    transform: translateY(-1px);
+}
+
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 200ms ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
 }
 </style>
