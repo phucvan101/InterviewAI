@@ -78,7 +78,7 @@
                             </span>
                         </div>
 
-                        <div class="font-semibold text-center">{{ user.sessions }}</div>
+                        <div class="font-semibold text-center">{{ user.interview_count }}</div>
 
                         <div class="flex items-center gap-2 justify-center">
                             <span class="w-2 h-2 rounded-full"
@@ -98,7 +98,7 @@
 
                         <div class="text-center">
                             <span class="text-gray-400">{{ user.auth_provider === 'google' ? 'Google' : 'Thường'
-                                }}</span>
+                            }}</span>
                         </div>
 
                         <div class="flex justify-center gap-3 text-lg">
