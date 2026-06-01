@@ -19,7 +19,7 @@
         <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
             <button v-for="item in visibleNavItems" :key="item.label"
                 class="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150"
-                :style="route.path === item.route
+                :style="isActive(item)
                     ? 'background: #4F46E5; border: 1px solid rgba(79, 70, 229, 0.2); color:#fff;'
                     : 'color:rgba(255,255,255,0.5);'" @click="router.push(item.route)">
                 <div class="w-[18px] h-[18px]" :style="{
@@ -81,10 +81,10 @@ const navItems = ref([
         permissions: ['users.read'],
     },
     {
-        label: 'Phòng phỏng vấn', active: false,
+        label: 'Quản lý phiên phỏng vấn', active: false,
         icon: icon_ppv,
-        route: '/admin/interview-rooms',
-        permissions: [],
+        route: '/admin/sessions',
+        permissions: ['sessions.read'],
     },
     {
         label: 'Cấu hình quyền', active: false,
@@ -92,12 +92,12 @@ const navItems = ref([
         route: '/admin/role-configuration',
         permissions: ['roles.read'],
     },
-    {
-        label: 'Cài đặt hệ thống', active: false,
-        icon: icon_cdht,
-        route: '/admin/system-settings',
-        permissions: [],
-    },
+    // {
+    //     label: 'Cài đặt hệ thống', active: false,
+    //     icon: icon_cdht,
+    //     route: '/admin/system-settings',
+    //     permissions: [],
+    // },
 ])
 
 function setActiveNav(selected) {
@@ -123,5 +123,12 @@ const visibleNavItems = computed(() => {
 const handleLogout = () => {
     auth.logout()
     router.push('/')
+}
+
+const isActive = (item) => {
+    return (
+        route.path === item.route ||
+        route.path.startsWith(item.route + '/')
+    )
 }
 </script>

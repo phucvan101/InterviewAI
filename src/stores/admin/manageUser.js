@@ -52,6 +52,7 @@ function normalizeUser(user = {}) {
         auth_provider: normalizeAuthProvider(user),
         status: normalizeStatus(user),
         username: user.username ?? '',
+        interview_count: user.interview_count ?? 0,
         is_active: user.is_active ?? true,
         is_deleted: user.is_deleted ?? false,
         is_superuser: user.is_superuser ?? false,
