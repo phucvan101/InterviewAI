@@ -415,7 +415,7 @@ onMounted(fetchSessions)
                                 class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/8 text-white/40 hover:text-white/80 transition-all">
                                 <Edit3 class="w-3.5 h-3.5" />
                             </button> -->
-                            <button
+                            <button v-if="authStore.hasPermission('sessions.delete')"
                                 class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-rose-500/10 text-white/40 hover:text-rose-400 transition-all"
                                 @click="handleDeleteSession(session.id)">
                                 <Trash2 class="w-3.5 h-3.5" />

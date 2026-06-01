@@ -39,7 +39,7 @@
             <div class="flex-1 min-w-0">
                 <div class="text-[12.5px] font-semibold text-white truncate">{{ auth.userName }}</div>
                 <div class="text-[10.5px] truncate" style="color:rgba(255,255,255,0.38);">{{ auth.user?.email || 'Khách'
-                    }}</div>
+                }}</div>
             </div>
             <button @click="handleLogout"
                 class="w-7 h-7 flex items-center justify-center rounded-lg transition-colors hover:bg-white/10"
@@ -84,7 +84,7 @@ const navItems = ref([
         label: 'Quản lý phiên phỏng vấn', active: false,
         icon: icon_ppv,
         route: '/admin/sessions',
-        permissions: [],
+        permissions: ['sessions.read'],
     },
     {
         label: 'Cấu hình quyền', active: false,
