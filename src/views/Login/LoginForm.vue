@@ -76,7 +76,8 @@
                 Ghi nhớ đăng nhập
             </label>
             <a href="#" class="text-[0.8rem] font-semibold transition-colors duration-150" style="color: #4F46E5;"
-                @mouseenter="$event.target.style.color = '#6862DF'">
+                @mouseenter="$event.target.style.color = '#6862DF'"
+                @click.prevent="$emit('forgot')">
                 Quên mật khẩu?
             </a>
         </div>
@@ -137,7 +138,7 @@ defineProps({
     },
 })
 
-const emit = defineEmits(['submit', 'switch', 'oauth'])
+const emit = defineEmits(['submit', 'switch', 'oauth', 'forgot'])
 const email = ref('')
 const password = ref('')
 const remember = ref(false)
