@@ -706,6 +706,11 @@
                     <span class="text-sm text-gray-200">{{ option.label }}</span>
                 </label>
             </div>
+            
+            <div class="mt-4">
+                <p class="text-sm text-gray-300 leading-relaxed mb-2">Chi tiết (Tại sao bạn nghĩ điểm này chưa đúng?):</p>
+                <el-input v-model="scoringFeedbackText" type="textarea" :rows="3" placeholder="Ví dụ: Tôi có 4 năm kinh nghiệm NodeJS nhưng hệ thống chấm sót..."></el-input>
+            </div>
         </div>
 
         <template #footer>
@@ -754,9 +759,12 @@ const scoringImproveOptions = [
     { label: 'Mức lương kỳ vọng', value: 'salary' },
 ]
 
+const scoringFeedbackText = ref('')
+
 function openScoringFeedback() {
     scoringFeedbackStep.value = 'initial'
     selectedImproveOptions.value = []
+    scoringFeedbackText.value = ''
     showScoringFeedback.value = true
 }
 
@@ -769,16 +777,42 @@ function onScoringFeedbackNo() {
     scoringFeedbackStep.value = 'improve'
 }
 
-function submitScoringFeedback() {
-    if (selectedImproveOptions.value.length === 0) {
-        ElMessage.warning('Vui lòng chọn ít nhất một mục cần cải thiện')
+async function submitScoringFeedback() {
+    if (selectedImproveOptions.value.length === 0 && !scoringFeedbackText.value.trim()) {
+        ElMessage.warning('Vui lòng chọn ít nhất một mục cần cải thiện hoặc nhập lý do chi tiết')
         return
     }
-    showScoringFeedback.value = false
-    ElMessage({
-        message: `Đã gửi phản hồi: ${selectedImproveOptions.value.join(', ')}`,
-        type: 'success'
-    })
+    
+    try {
+        const token = localStorage.getItem('access_token') || localStorage.getItem('token') || authStore.token
+        const headers = token ? { Authorization: `Bearer ${token}` } : {}
+        
+        const payload = {
+            cv_id: cvPath.value || 'unknown_cv',
+            jd_id: jdPath.value || 'unknown_jd',
+            feedback_text: `User chọn lỗi ở: ${selectedImproveOptions.value.join(', ')}. Chi tiết: ${scoringFeedbackText.value}`
+        }
+        
+        const response = await axios.post(buildApiUrl('/api/v1/scoring-feedback/'), payload, { headers })
+        
+        showScoringFeedback.value = false
+        
+        if (response.data.is_overridden) {
+            ElMessage({
+                message: `✅ Agent đã sửa điểm: ${response.data.rationale}`,
+                type: 'success',
+                duration: 6000
+            })
+            // TODO: Bạn có thể gọi hàm reload lại điểm (AnalysisPanel) ở đây
+        } else {
+            ElMessage({
+                message: `Phản hồi đã được ghi nhận: ${response.data.rationale}`,
+                type: 'info'
+            })
+        }
+    } catch (err) {
+        ElMessage.error(err.response?.data?.detail || 'Có lỗi xảy ra khi gửi phản hồi Agent')
+    }
 }
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '')
