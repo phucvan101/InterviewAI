@@ -928,17 +928,18 @@ async function startConversation() {
         const response = await authStore.authorizedRequest('/api/v1/conversations/', {
             method: 'POST',
             body: {
+                analysis_session_id: sessionId.value,
                 job_description: jd_raw_text.value,
                 cv_profile: cv_raw_text.value,
             },
         })
 
-        const sessionId = response.session_id
-        if (!sessionId) {
+        const conversationSessionId = response.session_id
+        if (!conversationSessionId) {
             throw new Error('Backend không trả về session_id')
         }
 
-        router.push(`/interview/${sessionId}`)
+        router.push(`/interview/${conversationSessionId}`)
     } catch (err) {
         ElMessage.error(err.message || 'Không thể tạo phiên phỏng vấn')
     } finally {
