@@ -20,6 +20,18 @@
                         </div>
                     </div>
 
+                    <button class="cv-btn" :disabled="isOpeningCv" @click="openJDPreview">
+                        <el-icon>
+                            <Document />
+                        </el-icon> Mô tả công việc
+                    </button>
+
+                    <button class="cv-btn" :disabled="isOpeningCv" @click="openCvPreview">
+                        <el-icon>
+                            <Document />
+                        </el-icon> {{ isOpeningCv ? 'Đang mở...' : 'Xem CV' }}
+                    </button>
+
                     <button class="export-btn">
                         <el-icon>
                             <Promotion />
@@ -29,6 +41,7 @@
                     <button class="export-btn" @click="exportReport">
                         <Download :size="16" /> Xuất báo cáo
                     </button>
+
                 </div>
             </header>
 
@@ -75,7 +88,8 @@
                             </p>
                             <div class="summary-tags">
                                 <span v-for="s in (report.strengths || []).slice(0, 2)" :key="s"
-                                    class="summary-tag tag-good">{{ s }}</span>
+                                    class="summary-tag tag-good">{{ s
+                                    }}</span>
                                 <span v-for="w in (report.weaknesses || report.improvements || []).slice(0, 1)" :key="w"
                                     class="summary-tag tag-warn">{{ w }}</span>
                             </div>
@@ -113,7 +127,8 @@
                                     </div>
                                     <div class="score-bar-track">
                                         <div class="score-bar-fill"
-                                            :style="{ width: item.value + '%', background: item.color }"></div>
+                                            :style="{ width: item.value + '%', background: item.color }">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -216,16 +231,28 @@
                         </button>
                     </div>
                 </div>
+
+                <el-dialog v-if="report.job_description" v-model="dialogVisible" title="Mô tả công việc" width="900px"
+                    destroy-on-close class="job-dialog">
+                    <div class="job-description" v-html="formatDescription(report.job_description)" />
+
+                    <template #footer>
+                        <el-button color="#6366F1" @click="dialogVisible = false">
+                            Đóng
+                        </el-button>
+                    </template>
+                </el-dialog>
             </main>
         </div>
     </LayoutInterview>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import * as echarts from 'echarts'
-import { Promotion } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import { Promotion, Document } from '@element-plus/icons-vue'
 import {
     ChevronLeft, BarChart2, Download, AlertCircle,
     CheckCircle, AlertTriangle, Lightbulb, BookOpen
@@ -241,8 +268,12 @@ const error = ref(null)
 const report = ref(null)
 const showAll = ref(false)
 const radarChartRef = ref(null)
+const isOpeningCv = ref(false)
 const authStore = useAuthStore()
 let chartInstance = null
+let cvPreviewObjectUrl = null
+const dialogVisible = ref(false)
+
 
 async function fetchReport() {
     loading.value = true
@@ -261,10 +292,55 @@ async function fetchReport() {
 
 onMounted(() => fetchReport())
 
+onBeforeUnmount(() => {
+    if (cvPreviewObjectUrl) {
+        URL.revokeObjectURL(cvPreviewObjectUrl)
+        cvPreviewObjectUrl = null
+    }
+})
+
 // Overall score (0-100)
 const overallScore = computed(() => {
     return Number(report.value?.overall_score || 0)
 })
+
+const cvPreview = computed(() => {
+    return report.value?.cv_preview || report.value?.conversation?.cv_preview || null
+})
+
+async function openCvPreview() {
+    const preview = cvPreview.value
+    const previewUrl = preview?.preview_url || `/api/v1/conversations/${conversationId.value}/cv-preview`
+
+    if (!previewUrl) {
+        ElMessage.warning('Không tìm thấy file CV cho phiên phỏng vấn này.')
+        return
+    }
+
+    isOpeningCv.value = true
+    try {
+        const blob = await authStore.authorizedBlobRequest(previewUrl)
+
+        if (cvPreviewObjectUrl) URL.revokeObjectURL(cvPreviewObjectUrl)
+        cvPreviewObjectUrl = URL.createObjectURL(
+            blob.type ? blob : new Blob([blob], { type: preview?.content_type || 'application/pdf' })
+        )
+
+        window.open(cvPreviewObjectUrl, '_blank', 'noopener,noreferrer')
+    } catch (e) {
+        ElMessage.error(e.message || 'Không thể mở file CV.')
+    } finally {
+        isOpeningCv.value = false
+    }
+}
+
+const openJDPreview = () => {
+    dialogVisible.value = true
+}
+
+const formatDescription = (text) => {
+    return text?.replace(/\n/g, '<br>') || ''
+}
 
 // Score color for 0-100 scale
 function getScoreColor100(v) {

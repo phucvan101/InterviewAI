@@ -510,6 +510,46 @@ export const useAuthStore = defineStore('auth', () => {
     return request(path, { ...options, auth: true })
   }
 
+  async function authorizedBlobRequest(path, options = {}) {
+    const {
+      method = 'GET',
+      body,
+      retryOn401 = true,
+      headers = {},
+    } = options
+
+    const currentTokens = syncTokensFromStorage()
+    const requestHeaders = { ...headers }
+
+    if (currentTokens.accessToken) {
+      requestHeaders.Authorization = `Bearer ${currentTokens.accessToken}`
+    }
+
+    try {
+      const response = await axios({
+        url: buildUrl(path),
+        method,
+        headers: requestHeaders,
+        data: body,
+        responseType: 'blob',
+      })
+
+      return response.data
+    } catch (err) {
+      const status = err.response?.status
+
+      if (status === 401 && retryOn401 && currentTokens.refreshToken) {
+        await refreshAccessToken()
+        return authorizedBlobRequest(path, { ...options, retryOn401: false })
+      }
+
+      const error = new Error(err.message || 'Không thể tải file.')
+      error.status = status
+      error.data = err.response?.data
+      throw error
+    }
+  }
+
   async function logout() {
     saveTokens(null, null)
     user.value = null
@@ -534,6 +574,7 @@ export const useAuthStore = defineStore('auth', () => {
     updateProfile,
     changePassword,
     authorizedRequest,
+    authorizedBlobRequest,
     logout,
   }
 })
