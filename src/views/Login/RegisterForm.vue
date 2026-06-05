@@ -11,9 +11,9 @@
         <div class="flex flex-col gap-1.5">
             <label class="text-[0.8rem] font-semibold" style="color: rgba(255,255,255,0.72);">Họ và
                 tên</label>
-            <div class="flex items-center rounded-xl border transition-all duration-200" :style="{
+            <div class="flex items-center rounded-xl border transition-all duration-200 relative" :style="{
                 background: '#111630',
-                borderColor: focusedField === 'fullName' ? 'rgba(109,67,245,0.65)' : 'rgba(255,255,255,0.08)',
+                borderColor: focusedField === 'fullName' ? 'rgba(109,67,245,0.65)' : (validation.fullName === false ? 'rgba(239,68,68,0.5)' : (validation.fullName === true ? 'rgba(16,185,129,0.5)' : 'rgba(255,255,255,0.08)')),
                 boxShadow: focusedField === 'fullName' ? '0 0 0 3px rgba(109,67,245,0.12)' : 'none',
             }">
                 <svg class="w-4 h-4 ml-3.5 flex-shrink-0" style="color: rgba(255,255,255,0.28);" fill="none"
@@ -22,18 +22,31 @@
                         d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
                 </svg>
                 <input v-model="fullName" type="text" placeholder="Nguyễn Văn A"
-                    class="flex-1 bg-transparent border-none outline-none px-3 py-3.5 text-sm"
+                    class="flex-1 bg-transparent border-none outline-none px-3 py-3.5 text-sm pr-10"
                     style="color: rgba(255,255,255,0.88); font-family: inherit;" @focus="focusedField = 'fullName'"
                     @blur="focusedField = null" />
+                
+                <!-- Validation Icons -->
+                <div class="absolute right-3 flex items-center pointer-events-none">
+                    <svg v-if="validation.fullName === true" class="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <svg v-else-if="validation.fullName === false" class="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </div>
             </div>
+            <p v-if="validation.fullName === false" class="text-[0.72rem] mt-0.5 text-red-400">
+                {{ errors.fullName }}
+            </p>
         </div>
 
         <!-- Username -->
         <div class="flex flex-col gap-1.5">
             <label class="text-[0.8rem] font-semibold" style="color: rgba(255,255,255,0.72);">Username</label>
-            <div class="flex items-center rounded-xl border transition-all duration-200" :style="{
+            <div class="flex items-center rounded-xl border transition-all duration-200 relative" :style="{
                 background: '#111630',
-                borderColor: focusedField === 'username' ? 'rgba(109,67,245,0.65)' : 'rgba(255,255,255,0.08)',
+                borderColor: focusedField === 'username' ? 'rgba(109,67,245,0.65)' : (validation.username === false ? 'rgba(239,68,68,0.5)' : (validation.username === true ? 'rgba(16,185,129,0.5)' : 'rgba(255,255,255,0.08)')),
                 boxShadow: focusedField === 'username' ? '0 0 0 3px rgba(109,67,245,0.12)' : 'none',
             }">
                 <svg class="w-4 h-4 ml-3.5 flex-shrink-0" style="color: rgba(255,255,255,0.28);" fill="none"
@@ -42,11 +55,24 @@
                         d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                 </svg>
                 <input v-model="username" type="text" placeholder="user_01"
-                    class="flex-1 bg-transparent border-none outline-none px-3 py-3.5 text-sm"
+                    class="flex-1 bg-transparent border-none outline-none px-3 py-3.5 text-sm pr-10"
                     style="color: rgba(255,255,255,0.88); font-family: inherit;" @focus="focusedField = 'username'"
                     @blur="focusedField = null" />
+                
+                <!-- Validation Icons -->
+                <div class="absolute right-3 flex items-center pointer-events-none">
+                    <svg v-if="validation.username === true" class="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <svg v-else-if="validation.username === false" class="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </div>
             </div>
-            <p class="text-[0.72rem]" style="color: rgba(255,255,255,0.45);">
+            <p v-if="validation.username === false" class="text-[0.72rem] mt-0.5 text-red-400">
+                {{ errors.username }}
+            </p>
+            <p v-else class="text-[0.72rem] mt-0.5" style="color: rgba(255,255,255,0.45);">
                 3-50 ký tự, chỉ gồm a-z A-Z 0-9, dấu gạch dưới (_) hoặc gạch ngang (-).
             </p>
         </div>
@@ -54,9 +80,9 @@
         <!-- Email -->
         <div class="flex flex-col gap-1.5">
             <label class="text-[0.8rem] font-semibold" style="color: rgba(255,255,255,0.72);">Email</label>
-            <div class="flex items-center rounded-xl border transition-all duration-200" :style="{
+            <div class="flex items-center rounded-xl border transition-all duration-200 relative" :style="{
                 background: '#111630',
-                borderColor: focusedField === 'email' ? 'rgba(109,67,245,0.65)' : 'rgba(255,255,255,0.08)',
+                borderColor: focusedField === 'email' ? 'rgba(109,67,245,0.65)' : (validation.email === false ? 'rgba(239,68,68,0.5)' : (validation.email === true ? 'rgba(16,185,129,0.5)' : 'rgba(255,255,255,0.08)')),
                 boxShadow: focusedField === 'email' ? '0 0 0 3px rgba(109,67,245,0.12)' : 'none',
             }">
                 <svg class="w-4 h-4 ml-3.5 flex-shrink-0" style="color: rgba(255,255,255,0.28);" fill="none"
@@ -65,19 +91,32 @@
                         d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
                 </svg>
                 <input v-model="email" type="email" placeholder="name@company.com"
-                    class="flex-1 bg-transparent border-none outline-none px-3 py-3.5 text-sm"
+                    class="flex-1 bg-transparent border-none outline-none px-3 py-3.5 text-sm pr-10"
                     style="color: rgba(255,255,255,0.88); font-family: inherit;" @focus="focusedField = 'email'"
                     @blur="focusedField = null" />
+                
+                <!-- Validation Icons -->
+                <div class="absolute right-3 flex items-center pointer-events-none">
+                    <svg v-if="validation.email === true" class="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <svg v-else-if="validation.email === false" class="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </div>
             </div>
+            <p v-if="validation.email === false" class="text-[0.72rem] mt-0.5 text-red-400">
+                {{ errors.email }}
+            </p>
         </div>
 
         <!-- Password -->
         <div class="flex flex-col gap-1.5">
             <label class="text-[0.8rem] font-semibold" style="color: rgba(255,255,255,0.72);">Mật
                 khẩu</label>
-            <div class="flex items-center rounded-xl border transition-all duration-200" :style="{
+            <div class="flex items-center rounded-xl border transition-all duration-200 relative" :style="{
                 background: '#111630',
-                borderColor: focusedField === 'password' ? 'rgba(109,67,245,0.65)' : 'rgba(255,255,255,0.08)',
+                borderColor: focusedField === 'password' ? 'rgba(109,67,245,0.65)' : (validation.password === false ? 'rgba(239,68,68,0.5)' : (validation.password === true ? 'rgba(16,185,129,0.5)' : 'rgba(255,255,255,0.08)')),
                 boxShadow: focusedField === 'password' ? '0 0 0 3px rgba(109,67,245,0.12)' : 'none',
             }">
                 <svg class="w-4 h-4 ml-3.5 flex-shrink-0" style="color: rgba(255,255,255,0.28);" fill="none"
@@ -86,10 +125,21 @@
                         d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
                 </svg>
                 <input v-model="password" :type="showPassword ? 'text' : 'password'" placeholder="••••••••"
-                    class="flex-1 bg-transparent border-none outline-none px-3 py-3.5 text-sm"
+                    class="flex-1 bg-transparent border-none outline-none px-3 py-3.5 text-sm pr-16"
                     style="color: rgba(255,255,255,0.88); font-family: inherit;" @focus="focusedField = 'password'"
                     @blur="focusedField = null" />
-                <button type="button" class="px-3.5 flex items-center transition-colors duration-150"
+                
+                <!-- Validation Icons -->
+                <div class="absolute right-12 flex items-center pointer-events-none">
+                    <svg v-if="validation.password === true" class="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <svg v-else-if="validation.password === false" class="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </div>
+
+                <button type="button" class="px-3.5 flex items-center transition-colors duration-150 absolute right-0"
                     style="color: rgba(255,255,255,0.28);" @click="showPassword = !showPassword"
                     @mouseenter="$event.currentTarget.style.color = 'rgba(255,255,255,0.65)'"
                     @mouseleave="$event.currentTarget.style.color = 'rgba(255,255,255,0.28)'">
@@ -108,7 +158,10 @@
                     </svg>
                 </button>
             </div>
-            <p class="text-[0.72rem]" style="color: rgba(255,255,255,0.45);">
+            <p v-if="validation.password === false" class="text-[0.72rem] mt-0.5 text-red-400">
+                {{ errors.password }}
+            </p>
+            <p v-else class="text-[0.72rem] mt-0.5" style="color: rgba(255,255,255,0.45);">
                 8-100 ký tự, có ít nhất 1 chữ in hoa và 1 số.
             </p>
         </div>
@@ -171,7 +224,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
 defineProps({
     isLoading: {
@@ -191,6 +244,63 @@ const showPassword = ref(false)
 
 const USERNAME_REGEX = /^[a-zA-Z0-9_-]{3,50}$/
 const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*\d).{8,100}$/
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+const validation = ref({
+    fullName: null,
+    username: null,
+    email: null,
+    password: null
+})
+
+const errors = ref({
+    fullName: '',
+    username: '',
+    email: '',
+    password: ''
+})
+
+// Validation Watchers
+watch(fullName, (val) => {
+    if (!val || val.trim().length === 0) {
+        validation.value.fullName = null
+        errors.value.fullName = ''
+    } else {
+        validation.value.fullName = val.trim().length > 0
+        if (!validation.value.fullName) errors.value.fullName = 'Họ và tên không hợp lệ.'
+    }
+})
+
+watch(username, (val) => {
+    if (!val || val.trim().length === 0) {
+        validation.value.username = null
+        errors.value.username = ''
+    } else {
+        validation.value.username = USERNAME_REGEX.test(val.trim())
+        if (!validation.value.username) errors.value.username = 'Username không hợp lệ. Chỉ dùng a-z, A-Z, 0-9, _, - và dài 3-50 ký tự.'
+    }
+})
+
+watch(password, (val) => {
+    if (!val || val.length === 0) {
+        validation.value.password = null
+        errors.value.password = ''
+    } else {
+        validation.value.password = PASSWORD_REGEX.test(val)
+        if (!validation.value.password) errors.value.password = 'Mật khẩu phải dài 8-100 ký tự, có ít nhất 1 chữ in hoa và 1 số.'
+    }
+})
+
+watch(email, (val) => {
+    if (!val || val.trim().length === 0) {
+        validation.value.email = null
+        errors.value.email = ''
+    } else {
+        validation.value.email = EMAIL_REGEX.test(val.trim())
+        if (!validation.value.email) errors.value.email = 'Email không đúng định dạng.'
+        else errors.value.email = ''
+    }
+})
 
 const oauthProviders = [
     {
