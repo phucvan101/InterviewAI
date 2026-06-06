@@ -93,11 +93,14 @@
                 <input v-model="email" type="email" placeholder="name@company.com"
                     class="flex-1 bg-transparent border-none outline-none px-3 py-3.5 text-sm pr-10"
                     style="color: rgba(255,255,255,0.88); font-family: inherit;" @focus="focusedField = 'email'"
-                    @blur="focusedField = null" />
+                    @blur="handleEmailBlur" />
                 
                 <!-- Validation Icons -->
                 <div class="absolute right-3 flex items-center pointer-events-none">
-                    <svg v-if="validation.email === true" class="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <svg v-if="isValidatingEmail" class="w-5 h-5 text-indigo-400 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <svg v-else-if="validation.email === true" class="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                     <svg v-else-if="validation.email === false" class="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -291,16 +294,69 @@ watch(password, (val) => {
     }
 })
 
+const isValidatingEmail = ref(false)
+
 watch(email, (val) => {
+    // Chỉ reset validation khi đang gõ, không gọi API ở đây
     if (!val || val.trim().length === 0) {
         validation.value.email = null
         errors.value.email = ''
     } else {
-        validation.value.email = EMAIL_REGEX.test(val.trim())
-        if (!validation.value.email) errors.value.email = 'Email không đúng định dạng.'
-        else errors.value.email = ''
+        const isFormatValid = EMAIL_REGEX.test(val.trim())
+        if (!isFormatValid) {
+            validation.value.email = false
+            errors.value.email = 'Email không đúng định dạng.'
+        } else {
+            // Định dạng đúng, tạm coi là hợp lệ cho đến khi blur kiểm tra
+            validation.value.email = null
+            errors.value.email = ''
+        }
     }
 })
+
+const handleEmailBlur = async () => {
+    focusedField.value = null
+    const val = email.value.trim()
+    if (!val || !EMAIL_REGEX.test(val)) return
+
+    isValidatingEmail.value = true
+    try {
+        let baseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
+        const path = `/api/v1/users/verify-email?email=${encodeURIComponent(val)}`
+        // Xử lý để tránh bị trùng /api/api/v1
+        if (baseUrl.endsWith('/api') && path.startsWith('/api/')) {
+            baseUrl = baseUrl.slice(0, -4)
+        }
+        const url = `${baseUrl}${path}`
+        
+        // Dùng fetch thay vì axios vì không cần auth
+        const res = await fetch(url)
+        if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}))
+            throw new Error(errorData.detail || 'Lỗi API xác thực')
+        }
+        const data = await res.json()
+        
+        // Kiểm tra deliverability
+        const isDeliverable = data.deliverability === 'DELIVERABLE'
+        if (isDeliverable || data.deliverability === 'UNKNOWN') {
+            validation.value.email = true
+            errors.value.email = ''
+        } else {
+            validation.value.email = false
+            errors.value.email = 'Email không tồn tại hoặc không thể nhận thư.'
+        }
+    } catch (err) {
+        // Hiển thị lỗi API ra UI (có thể hiển thị bằng ElMessage hoặc gán vào errors)
+        validation.value.email = false
+        errors.value.email = `Lỗi xác thực API: ${err.message}`
+        import('element-plus').then(({ ElMessage }) => {
+            ElMessage.error(`Lỗi xác thực email: ${err.message}`)
+        })
+    } finally {
+        isValidatingEmail.value = false
+    }
+}
 
 const oauthProviders = [
     {
