@@ -1,6 +1,6 @@
 <template>
     <LayoutDefaultAdmin>
-        <div class="bg-[#0F172A] m-6 p-6 rounded-2xl text-white w-full">
+        <div class="bg-[#0F172A] m-6 p-6 rounded-2xl text-white">
             <div class="flex justify-between mb-4 items-center gap-4">
                 <div class="flex gap-4 flex-wrap">
                     <input v-model="filters.username" type="text" placeholder="Tên tài khoản..."
@@ -98,7 +98,7 @@
 
                         <div class="text-center">
                             <span class="text-gray-400">{{ user.auth_provider === 'google' ? 'Google' : 'Thường'
-                            }}</span>
+                                }}</span>
                         </div>
 
                         <div class="flex justify-center gap-3 text-lg">

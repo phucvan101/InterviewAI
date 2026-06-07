@@ -52,7 +52,7 @@
             <div class="flex-1 min-w-0">
                 <div class="text-[12.5px] font-semibold text-white truncate">{{ auth.userName }}</div>
                 <div class="text-[10.5px] truncate" style="color:rgba(255,255,255,0.38);">{{ auth.user?.email || 'Khách'
-                }}</div>
+                    }}</div>
             </div>
             <button @click="handleLogout"
                 class="w-7 h-7 flex items-center justify-center rounded-lg transition-colors hover:bg-white/10"
@@ -67,7 +67,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, onBeforeUnmount, ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
@@ -154,6 +154,11 @@ const handleSessionClick = (s) => {
 
 onMounted(() => {
     fetchHistory()
+    window.addEventListener('conversations:updated', fetchHistory)
+})
+
+onBeforeUnmount(() => {
+    window.removeEventListener('conversations:updated', fetchHistory)
 })
 
 // Auth store

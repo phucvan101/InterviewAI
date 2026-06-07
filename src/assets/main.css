@@ -246,3 +246,88 @@
     color: var(--text);
   }
 }
+
+/* Override El Dialog để match dark background */
+.el-dialog {
+  --el-dialog-bg-color: #1a1d27; /* màu dialog body */
+  --el-dialog-title-font-size: 16px;
+
+  background-color: #1a1d27;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+}
+
+/* Title bar */
+.el-dialog__header {
+  background-color: #1a1d27;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 20px 24px;
+}
+
+.el-dialog__title {
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.el-dialog__headerbtn .el-dialog__close {
+  color: #94a3b8;
+}
+
+.el-dialog__headerbtn:hover .el-dialog__close {
+  color: #e2e8f0;
+}
+
+/* Body */
+.el-dialog__body {
+  background-color: #1a1d27;
+  padding: 24px;
+}
+
+/* Footer */
+.el-dialog__footer {
+  background-color: #1a1d27;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 16px 24px;
+}
+
+/* Overlay backdrop */
+.el-overlay {
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+/* Form labels */
+.el-form-item__label {
+  color: #94a3b8 !important;
+}
+
+/* Inputs */
+.el-input__wrapper {
+  background-color: #0f1117 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+}
+
+.el-input__wrapper:hover {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2) !important;
+}
+
+.el-input__wrapper.is-focus {
+  box-shadow: 0 0 0 1px #7c3aed !important; /* màu accent tím giống button */
+}
+
+.el-input__inner {
+  color: #e2e8f0 !important;
+}
+
+/* Select */
+.el-select__wrapper {
+  background-color: #0f1117 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+}
+
+.el-select__selected-item {
+  color: #e2e8f0 !important;
+}

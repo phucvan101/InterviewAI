@@ -10,7 +10,7 @@
                     <p class="text-[12px] mt-0.5" style="color:rgba(255,255,255,0.38);">Thiết lập môi trường cho buổi mô
                         phỏng</p>
                 </div>
-                <button class="relative w-9 h-9 flex items-center justify-center rounded-xl border transition-colors"
+                <!-- <button class="relative w-9 h-9 flex items-center justify-center rounded-xl border transition-colors"
                     style="background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.08); color:rgba(255,255,255,0.5);"
                     @mouseenter="$event.currentTarget.style.background = 'rgba(255,255,255,0.08)'"
                     @mouseleave="$event.currentTarget.style.background = 'rgba(255,255,255,0.04)'">
@@ -20,7 +20,7 @@
                             d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
                     </svg>
                     <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 border border-[#0f1225]" />
-                </button>
+                </button> -->
             </header>
 
             <!-- Scrollable body -->

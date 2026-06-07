@@ -82,7 +82,7 @@
                         <p>Bạn sắp xóa phiên cho vị trí</p>
                         <strong>{{ deleteTarget?.job_position }}{{ deleteTarget?.company_name ? ` tại
                             ${deleteTarget.company_name}` : '' }}</strong>
-                        <div class="delete-warn">
+                        <div class="delete-warn" v-if="normalizeStatus(deleteTarget?.status) === 'completed'">
                             <AlertTriangle :size="14" />
                             Báo cáo phân tích và toàn bộ tin nhắn cũng sẽ bị xóa vĩnh viễn.
                         </div>

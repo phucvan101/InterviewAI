@@ -153,6 +153,7 @@ const props = defineProps({
     speechSupported: { type: Boolean, default: false },
     canGetQuestion: { type: Boolean, default: false },
     elapsedTime: { type: String, default: '00:00' },
+    speechTextBuffer: { type: String, default: '' },
 })
 
 // ─── Emits ────────────────────────────────────────────────────────────────────
@@ -228,6 +229,12 @@ function listResult(value) {
     if (Array.isArray(value)) return value.map(item => `• ${item}`).join('\n')
     return value || 'Chưa có dữ liệu'
 }
+
+watch(() => props.speechTextBuffer, (newText) => {
+    if (newText) {
+        answerText.value = newText
+    }
+})
 </script>
 
 <style scoped>
@@ -441,7 +448,7 @@ button:not(:disabled):hover {
     background: #1b1d2e;
     border: 1px solid rgba(255, 255, 255, 0.07);
     color: #f8fafc;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 700;
     line-height: 1.55;
     text-align: left;
