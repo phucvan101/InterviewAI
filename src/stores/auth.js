@@ -506,6 +506,13 @@ export const useAuthStore = defineStore('auth', () => {
     })
   }
 
+  async function forgotPassword(email) {
+    return request('/api/v1/users/forgot-password', {
+      method: 'POST',
+      body: { email }
+    })
+  }
+
   async function authorizedRequest(path, options = {}) {
     return request(path, { ...options, auth: true })
   }
@@ -573,6 +580,7 @@ export const useAuthStore = defineStore('auth', () => {
     fetchProfile,
     updateProfile,
     changePassword,
+    forgotPassword,
     authorizedRequest,
     authorizedBlobRequest,
     logout,

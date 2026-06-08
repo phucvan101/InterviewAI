@@ -47,22 +47,44 @@
 
         <!-- User -->
         <div class="flex items-center gap-3 px-4 py-4 border-t" style="border-color:rgba(255,255,255,0.06);">
-            <img :src="`https://i.pravatar.cc/40?u=${auth.user?.email || 'default'}`"
-                class="w-8 h-8 rounded-full object-cover flex-shrink-0" />
-            <div class="flex-1 min-w-0">
-                <div class="text-[12.5px] font-semibold text-white truncate">{{ auth.userName }}</div>
+            <button @click="showUserProfile = true" class="relative group cursor-pointer focus:outline-none" title="Xem thông tin cá nhân">
+                <img :src="`https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${auth.user?.email || 'default'}&backgroundColor=0f1225`"
+                    class="w-9 h-9 rounded-full object-cover flex-shrink-0 transition-transform duration-200 group-hover:scale-105 border border-white/10 bg-white/5 p-[1px]" />
+            </button>
+            <div class="flex-1 min-w-0 cursor-pointer" @click="showUserProfile = true" title="Xem thông tin cá nhân">
+                <div class="text-[12.5px] font-semibold text-white truncate hover:underline">{{ auth.userName }}</div>
                 <div class="text-[10.5px] truncate" style="color:rgba(255,255,255,0.38);">{{ auth.user?.email || 'Khách'
                 }}</div>
             </div>
-            <button @click="handleLogout"
-                class="w-7 h-7 flex items-center justify-center rounded-lg transition-colors hover:bg-white/10"
-                style="color:rgba(255,255,255,0.35);">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />
-                </svg>
-            </button>
+            <div class="flex gap-1">
+                <button v-if="auth.user?.auth_provider !== 'google'" @click="showChangePassword = true"
+                    class="w-7 h-7 flex items-center justify-center rounded-lg transition-colors hover:bg-white/10"
+                    style="color:rgba(255,255,255,0.35);" title="Đổi mật khẩu">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                </button>
+                <button @click="handleLogout"
+                    class="w-7 h-7 flex items-center justify-center rounded-lg transition-colors hover:bg-white/10"
+                    style="color:rgba(255,255,255,0.35);" title="Đăng xuất">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />
+                    </svg>
+                </button>
+            </div>
         </div>
+
+        <ChangePasswordModal 
+            v-if="showChangePassword" 
+            @close="showChangePassword = false" 
+        />
+        <UserProfileModal 
+            v-if="showUserProfile" 
+            @close="showUserProfile = false" 
+        />
     </aside>
 </template>
 
@@ -71,11 +93,15 @@ import { onMounted, ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import ChangePasswordModal from './ChangePasswordModal.vue'
+import UserProfileModal from './UserProfileModal.vue'
 
 const router = useRouter()
 const route = useRoute()
 
 const authStore = useAuthStore()
+const showChangePassword = ref(false)
+const showUserProfile = ref(false)
 
 
 // ── Navigation ───────────────────────────────────────────────────────────────

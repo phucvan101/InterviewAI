@@ -71,8 +71,13 @@
 
                 <!--Login-->
                 <!-- Header -->
-                <div v-if="!isRegisterMode">
-                    <LoginForm @submit="handleLogin" @switch="switchToRegister" @oauth="handleOAuth"
+                <div v-if="isForgotPasswordMode">
+                    <ForgotPasswordForm 
+                        @back-to-login="isForgotPasswordMode = false" 
+                    />
+                </div>
+                <div v-else-if="!isRegisterMode">
+                    <LoginForm @submit="handleLogin" @switch="switchToRegister" @oauth="handleOAuth" @forgot="isForgotPasswordMode = true"
                         :isLoading="isLoading" />
                 </div>
 
@@ -92,6 +97,7 @@ import { useAuthStore } from '@/stores/auth'
 import BG_IMAGE from '@/assets/image/avatarAI.png'
 import LoginForm from './LoginForm.vue'
 import RegisterForm from './RegisterForm.vue'
+import ForgotPasswordForm from './ForgotPasswordForm.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -99,6 +105,7 @@ const authStore = useAuthStore()
 
 const bgImage = ref(BG_IMAGE)
 const isRegisterMode = ref(false)
+const isForgotPasswordMode = ref(false)
 const isLoading = ref(false)
 const errorMessage = ref('')
 
@@ -171,11 +178,13 @@ async function handleOAuth(provider) {
 function switchToRegister() {
     errorMessage.value = ''
     isRegisterMode.value = true
+    isForgotPasswordMode.value = false
 }
 
 function switchToLogin() {
     errorMessage.value = ''
     isRegisterMode.value = false
+    isForgotPasswordMode.value = false
 }
 
 </script>
