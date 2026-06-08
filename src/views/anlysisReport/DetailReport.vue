@@ -32,10 +32,16 @@
                         </el-icon> {{ isOpeningCv ? 'Đang mở...' : 'Xem CV' }}
                     </button>
 
-                    <button class="export-btn">
+                    <button class="export-btn" @click="sendCV">
                         <el-icon>
                             <Promotion />
                         </el-icon> Nộp cv
+                    </button>
+
+                    <button class="export-btn" :disabled="isStartingReInterview" @click="startReInterview">
+                        <el-icon>
+                            <Promotion />
+                        </el-icon> Phỏng vấn lại
                     </button>
 
                     <button class="export-btn" @click="exportReport">
@@ -155,11 +161,11 @@
                             </div>
                         </div>
                         <!-- CTA -->
-                        <div class="cta-card">
+                        <!-- <div class="cta-card">
                             <h3>Mở khóa Phân tích Nâng cao</h3>
                             <p>Nhận phân tích cảm xúc từng từ và theo dõi biểu cảm khuôn mặt.</p>
                             <button class="cta-btn">NÂNG CẤP NGAY</button>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
 
@@ -199,7 +205,7 @@
                                     </span>
                                 </td>
 
-                                <td>
+                                <td style="font-size: 14px;">
                                     {{ gap.recommendation }}
                                 </td>
                             </tr>
@@ -251,7 +257,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import * as echarts from 'echarts'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElNotification } from 'element-plus'
 import { Promotion, Document } from '@element-plus/icons-vue'
 import {
     ChevronLeft, BarChart2, Download, AlertCircle,
@@ -260,6 +266,7 @@ import {
 import LayoutInterview from '../layouts/LayoutInterview.vue'
 import { useAuthStore } from '@/stores/auth'
 import './DetailReport.css'
+import { useRouter } from 'vue-router'
 
 const route = useRoute()
 const conversationId = computed(() => route.params.id)
@@ -273,6 +280,43 @@ const authStore = useAuthStore()
 let chartInstance = null
 let cvPreviewObjectUrl = null
 const dialogVisible = ref(false)
+const router = useRouter()
+const isStartingReInterview = ref(false)
+
+
+async function startReInterview() {
+    if (!report.value) {
+        ElMessage.warning('Không có dữ liệu báo cáo để khởi tạo phiên mới')
+        return
+    }
+
+    // cố gắng lấy JD/CV từ report (defensive)
+    const job_description = report.value.job_description || report.value.jd_raw_text || report.value.conversation?.job_description || ''
+    const cv_profile = report.value.cv_raw_text || report.value.cv_profile || report.value.conversation?.cv_profile || ''
+
+    isStartingReInterview.value = true
+    try {
+        const payload = {
+            analysis_session_id: report.value.analysis_session_id,
+            job_description,
+            cv_profile,
+        }
+
+        const response = await authStore.authorizedRequest('/api/v1/conversations/', {
+            method: 'POST',
+            body: payload,
+        })
+
+        const newSessionId = response.session_id || response?.data?.session_id
+        if (!newSessionId) throw new Error('Backend không trả về session_id')
+
+        router.push(`/interview/${newSessionId}`)
+    } catch (err) {
+        ElMessage.error(err?.message || 'Không thể tạo phiên phỏng vấn mới')
+    } finally {
+        isStartingReInterview.value = false
+    }
+}
 
 
 async function fetchReport() {
@@ -336,6 +380,31 @@ async function openCvPreview() {
 
 const openJDPreview = () => {
     dialogVisible.value = true
+}
+
+const sendCV = async () => {
+    try {
+        const res = await authStore.authorizedRequest(`/api/v1/email/send-job-application`, {
+            method: 'POST',
+            body: {
+                session_id: report.value.analysis_session_id
+            }
+        })
+
+        if (res.success) {
+            ElNotification.success({
+                title: 'Thành công',
+                message: 'CV của bạn đã được gửi đi thành công!',
+            })
+        } else {
+            ElNotification.error({
+                title: 'Thất bại',
+                message: 'CV của bạn đã không được gửi đi. Vui Lòng kiểm tra lại mô tả công việc đã có email người nhận chưa.',
+            })
+        }
+    } catch (e) {
+        ElMessage.error(e.message || 'Không thể gửi CV.')
+    }
 }
 
 const formatDescription = (text) => {

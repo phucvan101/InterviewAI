@@ -13,8 +13,9 @@
                 :is-loading-session="isLoadingSession" :is-ai-loading="isAiLoading" :is-ai-typing="isAiTyping"
                 :is-ending="isEnding" :is-ended="isEnded" :is-listening="isListening"
                 :speech-supported="speechSupported" :can-get-question="canGetQuestion" :elapsed-time="elapsedTime"
-                @back="router.push('/conversation')" @end="endInterview" @get-question="getNextQuestion"
-                @send="sendAnswer" @toggle-mic="toggleListening" @stop-mic="stopListening" />
+                :speech-text-buffer="speechTextBuffer" @back="router.push('/conversation')" @end="endInterview"
+                @get-question="getNextQuestion" @send="sendAnswer" @toggle-mic="toggleListening"
+                @stop-mic="stopListening" />
         </div>
     </LayoutInterview>
 </template>
@@ -104,6 +105,7 @@ const normalizedMessages = computed(() =>
 let clock = null
 
 onMounted(async () => {
+    // ✅ Khởi động clock tạm thời, fetchSession sẽ clear nếu cần
     clock = window.setInterval(() => { now.value = Date.now() }, 1000)
     await nextTick()
 
@@ -118,7 +120,7 @@ onMounted(async () => {
     }
 
     if (isHistoryMode.value) fetchHistory()
-    else fetchSession()
+    else await fetchSession() // ✅ await để fetchSession có cơ hội clear clock trước khi mounted xong
 })
 
 onBeforeUnmount(() => {
@@ -134,9 +136,9 @@ watch(() => route.params.sessionId, () => {
 })
 
 watch(speechResult, (value) => {
-    // Forward to InterviewChat via a shared ref if needed.
-    // For now kept simple — parent owns the speech state.
-    if (value && isListening.value) speechTextBuffer.value = value
+    if (value && isListening.value) {
+        speechTextBuffer.value += (speechTextBuffer.value ? ' ' : '') + value
+    }
 })
 
 // Buffer used to pass recognised speech down to the chat form.
@@ -184,6 +186,7 @@ const deleteSession = async (item) => {
     try {
         await apiRequest(`/api/v1/conversations/${id}`, { method: 'DELETE' })
         ElNotification.success({ title: `Đã xóa phiên phỏng vấn thành công vị trí ${item.job_position}` })
+        window.dispatchEvent(new CustomEvent('conversations:updated'))
         fetchHistory()
     } catch (err) {
         ElMessage.error(err.message || 'Không thể xóa phiên phỏng vấn')
@@ -218,13 +221,21 @@ async function fetchSession() {
         status.value = payload.status || ''
         score.value = payload.score
         messages.value = payload.messages || []
-        startedAt.value = payload.created_at ? new Date(payload.created_at).getTime() : Date.now()
+        startedAt.value = payload.created_at
+            ? new Date(payload.created_at).getTime()
+            : Date.now()
+
         if (isEnded.value) {
-            result.value = payload || {
-                score: payload.score,
-                total_messages: messages.value.length,
-                status: payload.status,
+            // ✅ Freeze đồng hồ tại thời điểm session kết thúc
+            if (payload.ended_at) {
+                now.value = new Date(payload.ended_at).getTime()
             }
+            // ✅ Stop clock, không để nó tick nữa
+            if (clock) {
+                window.clearInterval(clock)
+                clock = null
+            }
+            result.value = payload
         }
     } catch (err) {
         ElMessage.error(err.message || 'Không thể mở phiên phỏng vấn')

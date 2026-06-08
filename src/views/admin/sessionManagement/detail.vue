@@ -72,9 +72,7 @@ async function fetchSession() {
         error.value = null
         const sessionId = route.params.id
         const res = await authStore.authorizedRequest(`/api/v1/admin/sessions/${sessionId}`)
-
-        session.value = res;
-        console.log('Session fetched:', session.value)
+        session.value = res
     } catch (e: any) {
         error.value = e.message
     } finally {
@@ -85,33 +83,25 @@ async function fetchSession() {
 onMounted(fetchSession)
 
 // ─── Computed ─────────────────────────────────────────────────────────────────
-
-/** Lấy tên ứng viên từ candidate hoặc cv_profile */
 const candidateName = computed(() => {
     if (session.value?.candidate?.username) return session.value.candidate.username
     const cv = session.value?.cv_profile ?? ''
-    // dòng đầu tiên của CV thường là tên
     return cv.split('\n')[0]?.trim() ?? '—'
 })
 
-/** Parse result JSON string */
 const parsedResult = computed(() => {
-    try {
-        return JSON.parse(session.value?.result ?? '{}')
-    } catch {
-        return {}
-    }
+    try { return JSON.parse(session.value?.result ?? '{}') }
+    catch { return {} }
 })
 
 const scoreColor = computed(() => {
     const s = session.value?.score ?? 0
-    if (s >= 85) return '#a78bfa'
+    if (s >= 85) return '#a5b4fc'   // indigo-300 — đồng bộ với primary
     if (s >= 70) return '#34d399'
     if (s >= 50) return '#fbbf24'
     return '#f87171'
 })
 
-/** Chuyển scores object thành array có thứ tự để vẽ radar */
 const SCORE_LABELS: Record<string, string> = {
     technical: 'TECHNICAL',
     communication: 'COMMUNICATION',
@@ -135,10 +125,7 @@ const CX = 120, CY = 120, R = 80
 
 function polar(index: number, total: number, radius: number) {
     const angle = (Math.PI * 2 * index) / total - Math.PI / 2
-    return {
-        x: CX + radius * Math.cos(angle),
-        y: CY + radius * Math.sin(angle),
-    }
+    return { x: CX + radius * Math.cos(angle), y: CY + radius * Math.sin(angle) }
 }
 
 const radarPath = computed(() => {
@@ -193,7 +180,7 @@ function formatTime(iso: string) {
     return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 
-const TAG_COLORS = ['#a78bfa', '#34d399', '#f472b6', '#60a5fa', '#fbbf24', '#fb923c', '#38bdf8']
+const TAG_COLORS = ['#a5b4fc', '#34d399', '#f472b6', '#60a5fa', '#fbbf24', '#fb923c', '#38bdf8']
 
 function tagColor(i: number) {
     return TAG_COLORS[i % TAG_COLORS.length]
@@ -207,7 +194,7 @@ function scoreLabel(score: number) {
 }
 
 function scoreBgColor(score: number) {
-    if (score >= 90) return { bar: '#a78bfa', bg: '#1e1b4b' }
+    if (score >= 90) return { bar: '#a5b4fc', bg: '#1e1b4b' }  // indigo-300
     if (score >= 80) return { bar: '#34d399', bg: '#064e3b' }
     if (score >= 65) return { bar: '#fbbf24', bg: '#78350f' }
     return { bar: '#f87171', bg: '#450a0a' }
@@ -222,21 +209,11 @@ function toggleEvidence(key: string) {
     <LayoutDefaultAdmin>
         <div class="sp bg-[#0d0f1e]">
 
-            <!-- ── Loading ──────────────────────────────────────────── -->
+            <!-- ── Loading ── -->
             <div v-if="loading" class="sp-state">
                 <div class="sp-spinner" />
                 <span>Đang tải dữ liệu phỏng vấn…</span>
             </div>
-
-            <!-- ── Error ────────────────────────────────────────────── -->
-            <!-- <div v-else-if="error" class="sp-state sp-state--error">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="10" stroke="#f87171" stroke-width="1.5" />
-                    <path d="M12 8v4M12 16h.01" stroke="#f87171" stroke-width="1.5" stroke-linecap="round" />
-                </svg>
-                <span>{{ error }}</span>
-                <button class="sp-btn-retry" @click="fetchSession">Thử lại</button>
-            </div> -->
 
             <template v-else-if="session">
 
@@ -248,13 +225,13 @@ function toggleEvidence(key: string) {
                         <!-- Avatar -->
                         <div class="sp-avatar">
                             <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                                <circle cx="12" cy="8" r="4" stroke="#6366f1" stroke-width="1.5" />
-                                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#6366f1" stroke-width="1.5"
+                                <circle cx="12" cy="8" r="4" stroke="#4f46e5" stroke-width="1.5" />
+                                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#4f46e5" stroke-width="1.5"
                                     stroke-linecap="round" />
                             </svg>
                             <div class="sp-avatar__badge">
                                 <svg width="10" height="10" viewBox="0 0 10 10">
-                                    <circle cx="5" cy="5" r="5" fill="#6366f1" />
+                                    <circle cx="5" cy="5" r="5" fill="#4f46e5" />
                                     <path d="M3 5l1.5 1.5L7 3.5" stroke="#fff" stroke-width="1.2" stroke-linecap="round"
                                         stroke-linejoin="round" />
                                 </svg>
@@ -266,13 +243,13 @@ function toggleEvidence(key: string) {
                             <h1 class="sp-header__name">{{ candidateName }}</h1>
                             <p class="sp-header__pos">
                                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
-                                    <rect x="3" y="7" width="18" height="14" rx="2" stroke="#6366f1"
+                                    <rect x="3" y="7" width="18" height="14" rx="2" stroke="#4f46e5"
                                         stroke-width="1.5" />
-                                    <path d="M8 7V5a4 4 0 0 1 8 0v2" stroke="#6366f1" stroke-width="1.5" />
+                                    <path d="M8 7V5a4 4 0 0 1 8 0v2" stroke="#4f46e5" stroke-width="1.5" />
                                 </svg>
                                 {{ session.job_position }}
-                                <span v-if="session.company_name" class="sp-header__company">@ {{ session.company_name
-                                }}</span>
+                                <span v-if="session.company_name" class="sp-header__company">@ {{
+                                    session.company_name }}</span>
                             </p>
                             <div class="sp-chips">
                                 <span class="sp-chip">
@@ -309,7 +286,7 @@ function toggleEvidence(key: string) {
                     <div class="sp-score">
                         <div class="sp-score__ring">
                             <svg width="100" height="100" viewBox="0 0 100 100">
-                                <circle cx="50" cy="50" r="42" fill="none" stroke="#1e1b4b" stroke-width="7" />
+                                <circle cx="50" cy="50" r="42" fill="none" stroke="#141627" stroke-width="7" />
                                 <circle cx="50" cy="50" r="42" fill="none" :stroke="scoreColor" stroke-width="7"
                                     stroke-linecap="round" stroke-dasharray="263.9"
                                     :stroke-dashoffset="263.9 - (263.9 * session.score / 100)"
@@ -332,8 +309,9 @@ function toggleEvidence(key: string) {
                 <!-- ════════════════════════════════════════════════════ -->
                 <div class="sp-tags">
                     <span v-for="(tag, i) in session.analysis_report?.tags ?? []" :key="i" class="sp-tag"
-                        :style="{ borderColor: tagColor(i) + '66', color: tagColor(i), background: tagColor(i) + '14' }">{{
-                            tag }}</span>
+                        :style="{ borderColor: tagColor(i) + '66', color: tagColor(i), background: tagColor(i) + '14' }">
+                        {{ tag }}
+                    </span>
                 </div>
 
                 <!-- ════════════════════════════════════════════════════ -->
@@ -341,34 +319,33 @@ function toggleEvidence(key: string) {
                 <!-- ════════════════════════════════════════════════════ -->
                 <div class="sp-grid">
 
-                    <!-- ── Col Left: Transcript ─────────────────────────── -->
+                    <!-- ── Col Left: Transcript ── -->
                     <div class="sp-col-main">
                         <div class="sp-panel">
                             <div class="sp-panel__hd">
                                 <div class="sp-panel__title">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                                        <rect x="3" y="3" width="18" height="18" rx="2" stroke="#6366f1"
+                                        <rect x="3" y="3" width="18" height="18" rx="2" stroke="#4f46e5"
                                             stroke-width="1.5" />
-                                        <path d="M7 8h10M7 12h6M7 16h4" stroke="#6366f1" stroke-width="1.5"
+                                        <path d="M7 8h10M7 12h6M7 16h4" stroke="#4f46e5" stroke-width="1.5"
                                             stroke-linecap="round" />
                                     </svg>
                                     Hành trình Phỏng vấn
                                 </div>
                                 <div class="sp-panel__badges">
                                     <span class="sp-badge sp-badge--gray">AI AUTOMATED</span>
-                                    <span class="sp-badge sp-badge--purple">REAL-TIME ANALYSIS</span>
+                                    <span class="sp-badge sp-badge--primary">REAL-TIME ANALYSIS</span>
                                 </div>
                             </div>
 
                             <div class="sp-messages">
                                 <template v-for="msg in session.messages" :key="msg.id">
-
                                     <!-- Interviewer (AI) -->
                                     <div class="sp-msg sp-msg--ai">
                                         <div class="sp-msg__avatar sp-msg__avatar--ai">
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                                                <circle cx="12" cy="12" r="10" stroke="#6366f1" stroke-width="1.5" />
-                                                <path d="M8 12h8M12 8v8" stroke="#6366f1" stroke-width="1.5"
+                                                <circle cx="12" cy="12" r="10" stroke="#4f46e5" stroke-width="1.5" />
+                                                <path d="M8 12h8M12 8v8" stroke="#4f46e5" stroke-width="1.5"
                                                     stroke-linecap="round" />
                                             </svg>
                                         </div>
@@ -402,14 +379,13 @@ function toggleEvidence(key: string) {
                                             </svg>
                                         </div>
                                     </div>
-
                                 </template>
                                 <div v-if="!session.messages?.length" class="sp-empty">Chưa có tin nhắn.</div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- ── Col Right: Analysis ──────────────────────────── -->
+                    <!-- ── Col Right: Analysis ── -->
                     <div class="sp-col-side">
 
                         <!-- Summary -->
@@ -417,7 +393,7 @@ function toggleEvidence(key: string) {
                             <div class="sp-panel__hd">
                                 <div class="sp-panel__title">
                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                                        <path d="M12 2l2 7h7l-5.5 4 2 7L12 16l-5.5 4 2-7L3 9h7z" fill="#6366f1" />
+                                        <path d="M12 2l2 7h7l-5.5 4 2 7L12 16l-5.5 4 2-7L3 9h7z" fill="#4f46e5" />
                                     </svg>
                                     Tóm tắt Đánh giá
                                 </div>
@@ -427,21 +403,16 @@ function toggleEvidence(key: string) {
                             <!-- Radar -->
                             <div class="sp-radar">
                                 <svg :width="CX * 2" :height="CY * 2" :viewBox="`0 0 ${CX * 2} ${CY * 2}`">
-                                    <!-- grid -->
                                     <path v-for="(gp, gi) in radarGridPaths" :key="gi" :d="gp" fill="none"
                                         stroke="#2d2b5e" stroke-width="0.8" />
-                                    <!-- axes -->
                                     <line v-for="(ax, ai) in radarAxisLines" :key="'ax' + ai" :x1="CX" :y1="CY"
                                         :x2="ax.x2" :y2="ax.y2" stroke="#2d2b5e" stroke-width="0.8" />
-                                    <!-- filled -->
-                                    <path :d="radarPath" fill="#6366f1" fill-opacity="0.18" stroke="#6366f1"
+                                    <path :d="radarPath" fill="#4f46e5" fill-opacity="0.18" stroke="#4f46e5"
                                         stroke-width="1.5" />
-                                    <!-- dots -->
                                     <circle v-for="(item, i) in radarItems" :key="'dot' + i"
                                         :cx="polar(i, radarItems.length, R * (item.value / 100)).x"
                                         :cy="polar(i, radarItems.length, R * (item.value / 100)).y" r="3"
-                                        fill="#6366f1" />
-                                    <!-- labels -->
+                                        fill="#4f46e5" />
                                     <text v-for="(pt, pi) in radarLabelPoints" :key="'lb' + pi" :x="pt.x" :y="pt.y"
                                         text-anchor="middle" dominant-baseline="middle" fill="#64748b" font-size="7.5"
                                         font-family="'IBM Plex Mono', monospace">
@@ -482,7 +453,6 @@ function toggleEvidence(key: string) {
                                         <div class="sp-score-row__bar"
                                             :style="{ width: item.value + '%', background: scoreBgColor(item.value).bar }" />
                                     </div>
-                                    <!-- Evidence dropdown -->
                                     <div v-if="expandedEvidence === item.key" class="sp-evidence">
                                         {{ item.evidence }}
                                     </div>
@@ -537,11 +507,11 @@ function toggleEvidence(key: string) {
                             <div class="sp-stat">
                                 <span class="sp-stat__lbl">THỜI LƯỢNG</span>
                                 <span class="sp-stat__val">{{ formatDuration(session.interview_duration_seconds)
-                                }}</span>
+                                    }}</span>
                             </div>
                             <div class="sp-stat">
                                 <span class="sp-stat__lbl">TIN NHẮN</span>
-                                <span class="sp-stat__val sp-stat__val--purple">{{ session.message_count }}</span>
+                                <span class="sp-stat__val sp-stat__val--primary">{{ session.message_count }}</span>
                             </div>
                         </div>
 
@@ -565,17 +535,17 @@ function toggleEvidence(key: string) {
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap');
 
-/* ── Root ──────────────────────────────────────────── */
+/* ── Root ── */
 .sp {
     font-family: 'Be Vietnam Pro', sans-serif;
-    background: #0f0e1a;
+    background: #0d0f1e;
     min-height: 100vh;
     padding: 24px;
     color: #e2e8f0;
     box-sizing: border-box;
 }
 
-/* ── States ────────────────────────────────────────── */
+/* ── States ── */
 .sp-state {
     display: flex;
     flex-direction: column;
@@ -587,15 +557,13 @@ function toggleEvidence(key: string) {
     font-size: 14px;
 }
 
-.sp-state--error {
-    color: #f87171;
-}
-
 .sp-spinner {
     width: 36px;
     height: 36px;
-    border: 3px solid #1e1b4b;
-    border-top-color: #6366f1;
+    border: 3px solid #141627;
+    /* surface → #141627 */
+    border-top-color: #4f46e5;
+    /* accent  → #4f46e5 */
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }
@@ -609,8 +577,8 @@ function toggleEvidence(key: string) {
 .sp-btn-retry {
     padding: 8px 20px;
     background: transparent;
-    border: 1px solid #6366f1;
-    color: #6366f1;
+    border: 1px solid #4f46e5;
+    color: #4f46e5;
     border-radius: 8px;
     cursor: pointer;
     font-size: 13px;
@@ -618,10 +586,10 @@ function toggleEvidence(key: string) {
 }
 
 .sp-btn-retry:hover {
-    background: #1e1b4b;
+    background: #141627;
 }
 
-/* ── Header ────────────────────────────────────────── */
+/* ── Header ── */
 .sp-header {
     display: flex;
     align-items: center;
@@ -646,8 +614,10 @@ function toggleEvidence(key: string) {
     flex-shrink: 0;
     width: 60px;
     height: 60px;
-    background: linear-gradient(135deg, #1e1b4b, #2d2b5e);
-    border: 2px solid #6366f133;
+    background: linear-gradient(135deg, #141627, #2d2b5e);
+    /* #1e1b4b → #141627 */
+    border: 2px solid rgba(79, 70, 229, 0.2);
+    /* #6366f133 → rgba(79,70,229,0.2) */
     border-radius: 14px;
     display: flex;
     align-items: center;
@@ -658,7 +628,7 @@ function toggleEvidence(key: string) {
     position: absolute;
     bottom: -4px;
     right: -4px;
-    background: #0f0e1a;
+    background: #0d0f1e;
     border-radius: 50%;
     padding: 2px;
 }
@@ -667,7 +637,8 @@ function toggleEvidence(key: string) {
     font-size: 22px;
     font-weight: 700;
     margin: 0 0 4px;
-    background: linear-gradient(90deg, #e2e8f0, #6366f1);
+    background: linear-gradient(90deg, #e2e8f0, #a5b4fc);
+    /* #6366f1 → #a5b4fc */
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -700,7 +671,8 @@ function toggleEvidence(key: string) {
     font-family: 'IBM Plex Mono', monospace;
     padding: 4px 10px;
     border-radius: 20px;
-    background: #1e1b4b;
+    background: #141627;
+    /* #1e1b4b → #141627 */
     color: #94a3b8;
     border: 1px solid #2d2b5e;
 }
@@ -748,7 +720,7 @@ function toggleEvidence(key: string) {
     align-items: center;
     justify-content: center;
     gap: 2px;
-    padding: 33px 0px;
+    padding: 33px 0;
 }
 
 .sp-score__val {
@@ -793,7 +765,7 @@ function toggleEvidence(key: string) {
     border: 1px solid;
 }
 
-/* ── Grid ──────────────────────────────────────────── */
+/* ── Grid ── */
 .sp-grid {
     display: grid;
     grid-template-columns: 1fr 340px;
@@ -807,7 +779,7 @@ function toggleEvidence(key: string) {
     }
 }
 
-/* ── Panel ─────────────────────────────────────────── */
+/* ── Panel ── */
 .sp-panel {
     background: linear-gradient(135deg, #13122a 0%, #1a1830 100%);
     border: 1px solid #2d2b5e;
@@ -853,18 +825,21 @@ function toggleEvidence(key: string) {
 }
 
 .sp-badge--gray {
-    background: #1e1b4b;
+    background: #141627;
+    /* #1e1b4b → #141627 */
     color: #94a3b8;
     border: 1px solid #2d2b5e;
 }
 
-.sp-badge--purple {
-    background: #1e1b4b;
-    color: #6366f1;
-    border: 1px solid #6366f144;
+.sp-badge--primary {
+    background: #141627;
+    /* #1e1b4b → #141627 */
+    color: #a5b4fc;
+    /* #6366f1 → #a5b4fc (readable on dark bg) */
+    border: 1px solid rgba(79, 70, 229, 0.27);
 }
 
-/* ── Messages ──────────────────────────────────────── */
+/* ── Messages ── */
 .sp-messages {
     padding: 20px;
     display: flex;
@@ -904,8 +879,10 @@ function toggleEvidence(key: string) {
 }
 
 .sp-msg__avatar--ai {
-    background: #1e1b4b;
-    border: 1px solid #6366f133;
+    background: #141627;
+    /* #1e1b4b → #141627 */
+    border: 1px solid rgba(79, 70, 229, 0.2);
+    /* #6366f133 → */
 }
 
 .sp-msg__avatar--cand {
@@ -975,7 +952,7 @@ function toggleEvidence(key: string) {
     padding: 40px;
 }
 
-/* ── Summary ───────────────────────────────────────── */
+/* ── Summary ── */
 .sp-summary {
     padding: 14px 18px 0;
     font-size: 13px;
@@ -990,7 +967,7 @@ function toggleEvidence(key: string) {
     padding: 10px 0 6px;
 }
 
-/* ── Score rows ────────────────────────────────────── */
+/* ── Score rows ── */
 .sp-scores {
     padding: 10px 18px 14px;
     display: flex;
@@ -1037,7 +1014,8 @@ function toggleEvidence(key: string) {
 
 .sp-score-row__bar-bg {
     height: 4px;
-    background: #1e1b4b;
+    background: #141627;
+    /* #1e1b4b → #141627 */
     border-radius: 4px;
     overflow: hidden;
 }
@@ -1051,7 +1029,7 @@ function toggleEvidence(key: string) {
 .sp-evidence {
     margin-top: 8px;
     padding: 10px 12px;
-    background: #0f0e1a;
+    background: #0d0f1e;
     border: 1px solid #2d2b5e;
     border-radius: 8px;
     font-size: 12px;
@@ -1072,7 +1050,7 @@ function toggleEvidence(key: string) {
     }
 }
 
-/* ── Lists ─────────────────────────────────────────── */
+/* ── Lists ── */
 .sp-list {
     margin: 0;
     padding: 12px 18px 14px;
@@ -1107,7 +1085,7 @@ function toggleEvidence(key: string) {
     background: #f472b6;
 }
 
-/* ── Stats ─────────────────────────────────────────── */
+/* ── Stats ── */
 .sp-stats {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1139,11 +1117,13 @@ function toggleEvidence(key: string) {
     color: #e2e8f0;
 }
 
-.sp-stat__val--purple {
-    color: #6366f1;
+.sp-stat__val--primary {
+    color: #a5b4fc;
 }
 
-/* ── PDF btn ───────────────────────────────────────── */
+/* #6366f1 → #a5b4fc */
+
+/* ── PDF btn ── */
 .sp-btn-pdf {
     width: 100%;
     display: flex;
@@ -1151,7 +1131,8 @@ function toggleEvidence(key: string) {
     justify-content: center;
     gap: 8px;
     padding: 12px;
-    background: #13122a;
+    background: #141627;
+    /* #13122a → #141627 */
     border: 1px solid #2d2b5e;
     border-radius: 10px;
     color: #94a3b8;
@@ -1162,8 +1143,9 @@ function toggleEvidence(key: string) {
 }
 
 .sp-btn-pdf:hover {
-    border-color: #6366f1;
-    color: #6366f1;
-    background: #1e1b4b;
+    border-color: #4f46e5;
+    /* #6366f1 → #4f46e5 */
+    color: #a5b4fc;
+    background: rgba(79, 70, 229, 0.1);
 }
 </style>

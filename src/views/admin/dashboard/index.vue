@@ -6,18 +6,20 @@
             <section class="dashboard-hero mb-8 overflow-hidden rounded-[32px] px-8 py-10 sm:px-12">
                 <div class="relative z-10 max-w-2xl">
                     <div
-                        class="mb-4 inline-flex items-center gap-2 rounded-full border border-violet-400/20 bg-violet-500/10 px-3 py-1">
-                        <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-violet-400"></span>
-                        <p class="text-xs font-semibold uppercase tracking-widest text-violet-300">Admin overview</p>
+                        class="mb-4 inline-flex items-center gap-2 rounded-full border border-[#4f46e5]/20 bg-[#4f46e5]/10 px-3 py-1">
+                        <span class="h-1.5 w-1.5 animate-pulse rounded-full"
+                            style="background: rgba(79,70,229,0.55)"></span>
+                        <p class="text-xs font-semibold uppercase tracking-widest" style="color: rgba(79,70,229,0.55)">
+                            Admin overview</p>
                     </div>
                     <h1 class="text-3xl font-black leading-tight text-white sm:text-4xl">
                         Dashboard
                     </h1>
                     <p class="mt-3 text-base leading-relaxed text-slate-400">
                         Hệ thống đã ghi nhận
-                        <span class="font-bold text-violet-300">{{ formatNumber(stats.totalInterviews) }}</span>
+                        <span class="font-bold text-[#a5b4fc]">{{ formatNumber(stats.totalInterviews) }}</span>
                         lượt phỏng vấn, tỉ lệ hoàn thành hiện tại là
-                        <span class="font-bold text-violet-300">{{ formatPercent(stats.successRate) }}</span>.
+                        <span class="font-bold text-[#a5b4fc]">{{ formatPercent(stats.successRate) }}</span>.
                     </p>
                 </div>
             </section>
@@ -63,7 +65,7 @@
                         <div class="inline-flex shrink-0 rounded-xl bg-white/[0.04] p-1">
                             <button v-for="option in rangeOptions" :key="option.value" type="button"
                                 class="rounded-lg px-4 py-1.5 text-xs font-bold transition-all duration-150" :class="activityRange === option.value
-                                    ? 'bg-violet-500/25 text-violet-200 shadow-inner'
+                                    ? 'bg-[#4f46e5]/25 text-[#a5b4fc] shadow-inner'
                                     : 'text-slate-500 hover:text-slate-300'" @click="setActivityRange(option.value)">
                                 {{ option.label }}
                             </button>
@@ -80,7 +82,8 @@
                         <div v-else-if="!hasActivityData"
                             class="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-white/8">
                             <BarChart3 class="h-8 w-8 text-slate-600" />
-                            <p class="text-sm font-semibold text-slate-500">Chưa có dữ liệu cho khoảng thời gian này</p>
+                            <p class="text-sm font-semibold text-slate-500">Chưa có dữ liệu cho khoảng thời gian
+                                này</p>
                         </div>
                     </div>
                 </article>
@@ -106,7 +109,7 @@
                                 <img v-if="user.avatar" :src="user.avatar" :alt="user.name"
                                     class="h-10 w-10 rounded-full border border-white/10 object-cover" />
                                 <div v-else
-                                    class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-violet-500/30 to-indigo-500/30 text-xs font-black text-violet-200">
+                                    class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#4f46e5]/30 to-[#4338ca]/30 text-xs font-black text-[#a5b4fc]">
                                     {{ getInitials(user.name) }}
                                 </div>
                                 <span v-if="index === 0"
@@ -119,7 +122,7 @@
                                 <p class="truncate text-xs text-slate-500">{{ user.email }}</p>
                             </div>
                             <div class="text-right">
-                                <p class="text-sm font-black text-violet-300">{{ formatNumber(user.sessions) }}</p>
+                                <p class="text-sm font-black text-[#a5b4fc]">{{ formatNumber(user.sessions) }}</p>
                                 <p class="text-xs text-slate-600">sessions</p>
                             </div>
                         </div>
@@ -154,7 +157,6 @@ import {
     AlertCircle,
     BarChart3,
     CheckCircle2,
-    Info,
     Loader2,
     Radio,
     RefreshCw,
@@ -190,6 +192,15 @@ const rangeOptions = [
     { label: 'Month', value: 'month' },
 ]
 
+// ─── Màu đồng bộ theo #4f46e5 ───────────────────────────────────────────────
+const COLOR = {
+    primary: '#4f46e5',         // indigo-600 — accent chính
+    primaryText: '#a5b4fc',     // indigo-300 — text trên nền tối
+    primaryBg: 'bg-[#4f46e5]/15',
+    primaryIcon: 'text-[#a5b4fc]',
+    primaryBadge: 'bg-[#4f46e5]/12 text-[#a5b4fc]',
+}
+
 const statCards = computed(() => [
     {
         label: 'Tổng người dùng',
@@ -197,14 +208,14 @@ const statCards = computed(() => [
         badge: formatGrowth(stats.value.totalGrowth),
         badgeClass: 'bg-emerald-500/12 text-emerald-400',
         icon: UsersRound,
-        iconBg: 'bg-violet-500/15',
-        iconColor: 'text-violet-300',
+        iconBg: COLOR.primaryBg,
+        iconColor: COLOR.primaryIcon,
     },
     {
         label: 'Tổng phiên',
         value: formatNumber(stats.value.liveSessions),
         badge: stats.value.liveLabel || 'Live',
-        badgeClass: 'bg-pink-500/12 text-pink-400',
+        badgeClass: 'bg-pink-500/12 text-pink-400',   // Live badge — giữ contrast riêng
         icon: Radio,
         iconBg: 'bg-pink-500/15',
         iconColor: 'text-pink-300',
@@ -213,24 +224,24 @@ const statCards = computed(() => [
         label: 'Tỷ lệ thành công',
         value: formatPercent(stats.value.successRate),
         badge: stats.value.successLabel || 'Stable',
-        badgeClass: 'bg-violet-500/12 text-violet-400',
+        badgeClass: COLOR.primaryBadge,
         icon: CheckCircle2,
-        iconBg: 'bg-violet-500/15',
-        iconColor: 'text-violet-300',
+        iconBg: COLOR.primaryBg,
+        iconColor: COLOR.primaryIcon,
     },
     {
         label: 'Điểm trung bình',
         value: formatNumber(stats.value.averageScore),
         suffix: `/${stats.value.scoreDenominator || 100}`,
         icon: Star,
-        iconBg: 'bg-indigo-500/15',
-        iconColor: 'text-indigo-300',
+        iconBg: COLOR.primaryBg,
+        iconColor: COLOR.primaryIcon,
     },
 ])
 
-const hasActivityData = computed(() => {
-    return activity.value.some((item) => item.total > 0 || item.completed > 0)
-})
+const hasActivityData = computed(() =>
+    activity.value.some((item) => item.total > 0 || item.completed > 0)
+)
 
 const utilizationLabel = computed(() => {
     if (stats.value.liveSessions >= 10) return 'High'
@@ -332,18 +343,15 @@ function setActivityRange(nextRange) {
 async function fetchOverview() {
     loading.value = true
     error.value = ''
-
     try {
         const response = await authStore.authorizedRequest(
             `/api/v1/admin/dashboard/overview?activity_range=${activityRange.value}`,
         )
         const payload = unwrapPayload(response)
-
         stats.value = normalizeStats(payload.stats)
         activityRange.value = payload.interview_activity_range || activityRange.value
         activity.value = normalizeActivity(payload.interview_activity)
         topUsers.value = normalizeTopUsers(payload.top_interview_activity)
-
         await nextTick()
         renderChart()
     } catch (err) {
@@ -364,7 +372,8 @@ function renderChart() {
     const completed = activity.value.map((item) => item.completed)
 
     chartInstance.setOption({
-        color: ['#8b5cf6', '#38bdf8'],
+        // Series 1: #4f46e5 | Series 2: #38bdf8 (data contrast — giữ nguyên)
+        color: ['#4f46e5', '#38bdf8'],
         grid: { left: 12, right: 18, top: 40, bottom: 28, containLabel: true },
         tooltip: {
             trigger: 'axis',
@@ -373,11 +382,7 @@ function renderChart() {
             borderWidth: 1,
             borderRadius: 12,
             padding: [10, 14],
-            textStyle: {
-                color: '#cbd5e1',
-                fontFamily: 'inherit',
-                fontSize: 13,
-            },
+            textStyle: { color: '#cbd5e1', fontFamily: 'inherit', fontSize: 13 },
         },
         legend: {
             top: 0,
@@ -417,8 +422,8 @@ function renderChart() {
                 lineStyle: { width: 2.5 },
                 areaStyle: {
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                        { offset: 0, color: 'rgba(139,92,246,0.22)' },
-                        { offset: 1, color: 'rgba(139,92,246,0.01)' },
+                        { offset: 0, color: 'rgba(79,70,229,0.22)' },
+                        { offset: 1, color: 'rgba(79,70,229,0.01)' },
                     ]),
                 },
                 data: totals,
@@ -465,10 +470,10 @@ watch(activity, () => {
     min-height: 160px;
     background:
         linear-gradient(135deg, rgba(6, 8, 15, 0.05) 0%, rgba(6, 8, 15, 0.88) 100%),
-        radial-gradient(ellipse at 18% 55%, rgba(139, 92, 246, 0.32) 0%, transparent 52%),
-        radial-gradient(ellipse at 78% 20%, rgba(99, 102, 241, 0.2) 0%, transparent 46%),
+        radial-gradient(ellipse at 18% 55%, rgba(79, 70, 229, 0.55) 0%, transparent 52%),
+        radial-gradient(ellipse at 78% 20%, rgba(79, 70, 229, 0.2) 0%, transparent 46%),
         #0d0f1e;
-    border: 1px solid rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(79, 70, 229, 0.12);
 }
 
 .stat-card {
@@ -478,7 +483,7 @@ watch(activity, () => {
 }
 
 .stat-card:hover {
-    border-color: rgba(139, 92, 246, 0.18);
+    border-color: rgba(79, 70, 229, 0.2);
     transform: translateY(-2px);
 }
 
