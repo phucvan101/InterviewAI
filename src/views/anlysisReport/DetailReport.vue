@@ -40,13 +40,13 @@
 
                     <button class="export-btn" :disabled="isStartingReInterview" @click="startReInterview">
                         <el-icon>
-                            <Promotion />
+                            <Refresh />
                         </el-icon> Phỏng vấn lại
                     </button>
 
-                    <button class="export-btn" @click="exportReport">
+                    <!-- <button class="export-btn" @click="exportReport">
                         <Download :size="16" /> Xuất báo cáo
-                    </button>
+                    </button> -->
 
                 </div>
             </header>
@@ -258,7 +258,7 @@ import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import * as echarts from 'echarts'
 import { ElMessage, ElNotification } from 'element-plus'
-import { Promotion, Document } from '@element-plus/icons-vue'
+import { Promotion, Document, Refresh } from '@element-plus/icons-vue'
 import {
     ChevronLeft, BarChart2, Download, AlertCircle,
     CheckCircle, AlertTriangle, Lightbulb, BookOpen
@@ -297,12 +297,10 @@ async function startReInterview() {
     isStartingReInterview.value = true
     try {
         const payload = {
-            analysis_session_id: report.value.analysis_session_id,
-            job_description,
-            cv_profile,
+            session_id: report.value.session_id,
         }
 
-        const response = await authStore.authorizedRequest('/api/v1/conversations/', {
+        const response = await authStore.authorizedRequest(`/api/v1/conversations/${report.value.session_id}/retry`, {
             method: 'POST',
             body: payload,
         })

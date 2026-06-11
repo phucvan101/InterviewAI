@@ -114,7 +114,11 @@ onMounted(async () => {
         || authStore.token
 
     if (!token) {
-        ElMessage.error('Phiên đăng nhập hết hạn, vui lòng đăng nhập lại')
+        ElNotification.error({
+            title: 'Phiên đăng nhập hết hạn',
+            message: 'Vui lòng đăng nhập lại',
+            duration: 3000,
+        })
         router.push('/login')
         return
     }
@@ -306,7 +310,11 @@ async function endInterview() {
         router.push(`/analysis-reports/${sessionId.value}`)
 
     } catch (err) {
-        ElMessage.error(err.message || 'Không thể kết thúc phỏng vấn')
+        ElNotification.error({
+            title: 'Lỗi',
+            message: err.message || 'Không thể kết thúc phỏng vấn',
+            duration: 3000,
+        })
     } finally {
         isEnding.value = false
     }

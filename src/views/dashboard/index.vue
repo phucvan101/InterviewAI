@@ -607,7 +607,7 @@ import LayoutInterview from '../layouts/LayoutInterview.vue'
 import AnalysisPanel from '@/components/AnalysisPanel.vue'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import { useRouter } from 'vue-router'
 
 const showJobDescriptionDialog = ref(false);
@@ -918,7 +918,11 @@ async function getInforInterview(id_session) {
 
 async function startConversation() {
     if (!cvPath.value || !jdPath.value) {
-        ElMessage.error('Hãy tải CV và JD trước khi bắt đầu phỏng vấn')
+        ElNotification.warning({
+            title: 'Thiếu tài liệu',
+            message: 'Vui lòng đảm bảo bạn đã tải lên cả CV và Mô tả công việc để bắt đầu phiên phỏng vấn.',
+            duration: 3000,
+        })
         return
     }
 
@@ -1141,7 +1145,11 @@ async function handleJdFileUploadRequest(file) {
 async function handleJdTextUploadRequest() {
     const text = jobDescriptionText.value.trim()
     if (!text) {
-        ElMessage.error('Vui lòng dán nội dung mô tả công việc')
+        ElNotification.warning({
+            title: 'Thiếu nội dung',
+            message: 'Vui lòng dán nội dung mô tả công việc vào ô văn bản.',
+            duration: 3000,
+        })
         return
     }
 
@@ -1168,7 +1176,11 @@ async function handleJdTextUploadRequest() {
         jobDescriptionFileName.value = response.data.file_name || 'job_description.txt'
         jobDescriptionUploadState.value = 'success'
         jdErrorMsg.value = ''
-        ElMessage.success('Đã gửi JD dạng text thành công')
+        ElNotification.success({
+            title: 'Thành công',
+            message: 'Đã gửi JD dạng text thành công',
+            duration: 3000,
+        })
     } catch (err) {
         jobDescriptionUploadState.value = 'error'
         jdErrorMsg.value = err.response?.data?.detail || err.message || 'Có lỗi xảy ra, vui lòng thử lại'
@@ -1256,7 +1268,11 @@ async function handleCompanyFileUploadRequest(file) {
 async function handleCompanyTextUploadRequest() {
     const text = companyResearchText.value.trim()
     if (!text) {
-        ElMessage.error('Vui lòng dán nội dung nghiên cứu công ty')
+        ElNotification.error({
+            title: 'Thiếu nội dung',
+            message: 'Vui lòng dán nội dung nghiên cứu công ty.',
+            duration: 3000,
+        })
         return
     }
 
@@ -1283,7 +1299,11 @@ async function handleCompanyTextUploadRequest() {
         companyFileName.value = response.data.file_name || 'company_research.txt'
         companyUploadState.value = 'success'
         companyErrorMsg.value = ''
-        ElMessage.success('Đã gửi Company Research dạng text thành công')
+        ElNotification.success({
+            title: 'Thành công',
+            message: 'Đã gửi Company Research dạng text thành công',
+            duration: 3000,
+        })
     } catch (err) {
         companyUploadState.value = 'error'
         companyErrorMsg.value = err.response?.data?.detail || err.message || 'Có lỗi xảy ra, vui lòng thử lại'
