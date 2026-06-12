@@ -104,6 +104,11 @@
                         <Brain :size="18" />
                         <span>Get question</span>
                     </button>
+                    <button v-if="isSpeaking" class="mini-button skip-button" title="Bỏ qua giọng đọc AI"
+                        @click="$emit('skip-tts')">
+                        <SkipForward :size="18" />
+                        <span>Skip</span>
+                    </button>
                     <button class="mic-button" :class="{ listening: isListening }"
                         :disabled="isEnded || !speechSupported" title="Nhập bằng giọng nói"
                         @click="$emit('toggle-mic')">
@@ -136,7 +141,7 @@ import WaveSurfer from 'wavesurfer.js'
 import RecordPlugin from 'wavesurfer.js/dist/plugins/record.esm.js'
 import {
     ArrowLeft, AudioLines, Bot, Brain,
-    Mic, MicOff, Send, Settings, User,
+    Mic, MicOff, Send, Settings, SkipForward, User,
 } from 'lucide-vue-next'
 
 // ─── Props ───────────────────────────────────────────────────────────────────
@@ -150,6 +155,7 @@ const props = defineProps({
     isEnding: { type: Boolean, default: false },
     isEnded: { type: Boolean, default: false },
     isListening: { type: Boolean, default: false },
+    isSpeaking: { type: Boolean, default: false },
     speechSupported: { type: Boolean, default: false },
     canGetQuestion: { type: Boolean, default: false },
     elapsedTime: { type: String, default: '00:00' },
@@ -157,7 +163,7 @@ const props = defineProps({
 })
 
 // ─── Emits ────────────────────────────────────────────────────────────────────
-defineEmits(['back', 'end', 'get-question', 'send', 'toggle-mic', 'stop-mic'])
+defineEmits(['back', 'end', 'get-question', 'send', 'toggle-mic', 'stop-mic', 'skip-tts'])
 
 // ─── Local state ──────────────────────────────────────────────────────────────
 const answerText = ref('')
@@ -502,6 +508,12 @@ button:not(:disabled):hover {
     border-radius: 14px;
     color: #cbd5e1;
     font-weight: 900;
+}
+
+.skip-button {
+    color: #fef3c7;
+    border-color: rgba(245, 158, 11, 0.34);
+    background: rgba(245, 158, 11, 0.12);
 }
 
 .mic-button {

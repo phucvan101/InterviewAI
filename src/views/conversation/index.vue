@@ -11,11 +11,11 @@
             <!-- ── Chat / live interview mode ────────────────────────────── -->
             <InterviewChat v-else :title="conversationTitle" :messages="normalizedMessages" :result="result"
                 :is-loading-session="isLoadingSession" :is-ai-loading="isAiLoading" :is-ai-typing="isAiTyping"
-                :is-ending="isEnding" :is-ended="isEnded" :is-listening="isListening"
+                :is-ending="isEnding" :is-ended="isEnded" :is-listening="isListening" :is-speaking="isSpeaking"
                 :speech-supported="speechSupported" :can-get-question="canGetQuestion" :elapsed-time="elapsedTime"
                 :speech-text-buffer="speechTextBuffer" @back="router.push('/conversation')" @end="endInterview"
                 @get-question="getNextQuestion" @send="sendAnswer" @toggle-mic="toggleListening"
-                @stop-mic="stopListening" />
+                @stop-mic="stopListening" @skip-tts="stopSpeaking" />
         </div>
     </LayoutInterview>
 </template>
@@ -23,7 +23,6 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useScroll, useSpeechRecognition } from '@vueuse/core'
 import { ElMessage, ElNotification } from 'element-plus'
 
 import LayoutInterview from '../layouts/LayoutInterview.vue'
@@ -31,7 +30,6 @@ import InterviewHistory from './InterviewHistory.vue'
 import InterviewChat from './InterviewChat.vue'
 
 import { useAuthStore } from '@/stores/auth'
-import { useSpeechSynthesis } from '@/composables/useSpeech'
 
 const route = useRoute()
 const router = useRouter()
@@ -61,14 +59,18 @@ const historyTotal = ref(0)
 const historyTotalPages = ref(1)
 
 // ─── Speech ───────────────────────────────────────────────────────────────────
-const { speak } = useSpeechSynthesis()
-const {
-    isSupported: speechSupported,
-    isListening,
-    result: speechResult,
-    start: startListening,
-    stop: stopListening,
-} = useSpeechRecognition({ lang: 'vi-VN', continuous: true, interimResults: true })
+const speechSupported = computed(() =>
+    typeof navigator !== 'undefined'
+    && !!navigator.mediaDevices?.getUserMedia
+    && typeof MediaRecorder !== 'undefined'
+)
+const isListening = ref(false)
+const isTranscribing = ref(false)
+const speechTextBuffer = ref('')
+const recorder = ref(null)
+const recorderStream = ref(null)
+const audioChunks = ref([])
+const currentAudio = ref(null)
 
 // ─── Computed ─────────────────────────────────────────────────────────────────
 const isHistoryMode = computed(() => !route.params.sessionId)
@@ -79,6 +81,7 @@ const conversationTitle = computed(() =>
 const isEnded = computed(() =>
     ['completed', 'ended', 'finished'].includes(normalizeStatus(status.value))
 )
+const isSpeaking = computed(() => !!currentAudio.value)
 const lastMessageRole = computed(() => normalizedMessages.value.at(-1)?.role || '')
 const canGetQuestion = computed(() => lastMessageRole.value !== 'interviewer')
 
@@ -130,6 +133,7 @@ onMounted(async () => {
 onBeforeUnmount(() => {
     if (clock) window.clearInterval(clock)
     stopListening()
+    stopSpeaking()
 })
 
 // ─── Watchers ─────────────────────────────────────────────────────────────────
@@ -139,18 +143,13 @@ watch(() => route.params.sessionId, () => {
     else fetchSession()
 })
 
-watch(speechResult, (value) => {
-    if (value && isListening.value) {
-        speechTextBuffer.value += (speechTextBuffer.value ? ' ' : '') + value
-    }
-})
-
-// Buffer used to pass recognised speech down to the chat form.
-const speechTextBuffer = ref('')
-
 // ─── API helper ───────────────────────────────────────────────────────────────
 async function apiRequest(path, options = {}) {
     return authStore.authorizedRequest(path, options)
+}
+
+async function apiBlobRequest(path, options = {}) {
+    return authStore.authorizedBlobRequest(path, options)
 }
 
 // ─── History ──────────────────────────────────────────────────────────────────
@@ -347,12 +346,132 @@ function appendInterviewerQuestion(response) {
         message_id: payload.message_id,
         created_at: new Date().toISOString(),
     })
-    // speak(question)
+    speakQuestion(question)
 }
 
-function toggleListening() {
-    if (isListening.value) stopListening()
-    else startListening()
+async function toggleListening() {
+    if (isListening.value) {
+        stopListening()
+        return
+    }
+    await startListening()
+}
+
+async function startListening() {
+    if (!speechSupported.value || isListening.value || isTranscribing.value) return
+
+    try {
+        audioChunks.value = []
+        speechTextBuffer.value = ''
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+        recorderStream.value = stream
+
+        const mimeType = getSupportedAudioMimeType()
+        recorder.value = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
+        recorder.value.ondataavailable = (event) => {
+            if (event.data?.size) audioChunks.value.push(event.data)
+        }
+        recorder.value.onstop = uploadRecordedAudio
+        recorder.value.start()
+        isListening.value = true
+    } catch (err) {
+        ElMessage.error(err?.message || 'Không thể mở micro.')
+        cleanupRecorder()
+    }
+}
+
+function stopListening() {
+    if (!recorder.value || recorder.value.state === 'inactive') {
+        cleanupRecorder()
+        isListening.value = false
+        return
+    }
+
+    recorder.value.stop()
+    isListening.value = false
+}
+
+async function uploadRecordedAudio() {
+    const chunks = audioChunks.value
+    cleanupRecorder()
+    if (!chunks.length) return
+
+    isTranscribing.value = true
+    try {
+        const type = chunks[0]?.type || getSupportedAudioMimeType() || 'audio/webm'
+        const audioBlob = new Blob(chunks, { type })
+        const formData = new FormData()
+        formData.append('file', audioBlob, `interview-answer.${getAudioExtension(type)}`)
+
+        const response = await apiRequest('/api/v1/speech/stt', {
+            method: 'POST',
+            body: formData,
+        })
+        const payload = response?.data || response || {}
+        const text = (payload.text || '').trim()
+        if (text) {
+            speechTextBuffer.value = text
+        } else {
+            ElMessage.warning('Không nhận diện được nội dung giọng nói.')
+        }
+    } catch (err) {
+        ElMessage.error(err.message || 'Không thể chuyển giọng nói thành văn bản.')
+    } finally {
+        isTranscribing.value = false
+        audioChunks.value = []
+    }
+}
+
+async function speakQuestion(text) {
+    if (!text) return
+
+    try {
+        stopSpeaking()
+        const audioBlob = await apiBlobRequest('/api/v1/speech/tts', {
+            method: 'POST',
+            body: { text },
+        })
+        const audioUrl = URL.createObjectURL(audioBlob)
+        const audio = new Audio(audioUrl)
+        currentAudio.value = { audio, audioUrl }
+        audio.onended = stopSpeaking
+        audio.onerror = stopSpeaking
+        await audio.play()
+    } catch (err) {
+        stopSpeaking()
+        console.warn('Không thể phát giọng đọc AI:', err)
+    }
+}
+
+function stopSpeaking() {
+    if (!currentAudio.value) return
+    currentAudio.value.audio.pause()
+    URL.revokeObjectURL(currentAudio.value.audioUrl)
+    currentAudio.value = null
+}
+
+function cleanupRecorder() {
+    recorderStream.value?.getTracks?.().forEach(track => track.stop())
+    recorderStream.value = null
+    recorder.value = null
+}
+
+function getSupportedAudioMimeType() {
+    const types = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/mp4',
+        'audio/mpeg',
+        'audio/wav',
+    ]
+    return types.find(type => MediaRecorder.isTypeSupported?.(type)) || ''
+}
+
+function getAudioExtension(mimeType = '') {
+    if (mimeType.includes('mp4')) return 'm4a'
+    if (mimeType.includes('mpeg')) return 'mp3'
+    if (mimeType.includes('wav')) return 'wav'
+    return 'webm'
 }
 
 // ─── Pure helpers ─────────────────────────────────────────────────────────────

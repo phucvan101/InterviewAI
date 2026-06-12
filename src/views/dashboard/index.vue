@@ -25,6 +25,11 @@
 
             <!-- Scrollable body -->
             <div class="flex-1 overflow-y-auto px-8 py-6 space-y-6">
+                <div v-if="isInterviewFeatureLocked" class="rounded-xl border px-4 py-3 text-sm"
+                    style="background:rgba(245,158,11,0.1); border-color:rgba(245,158,11,0.28); color:#fcd34d;">
+                    Tài khoản của bạn đang bị khóa. Bạn vẫn có thể xem lịch sử phỏng vấn và báo cáo, nhưng không thể
+                    tải tài liệu hoặc tạo phiên phỏng vấn mới.
+                </div>
 
                 <!-- ── Step Progress ── -->
                 <div class="flex items-center gap-0">
@@ -73,11 +78,12 @@
                         <!-- ═══ Card CV: có logic upload ═══ -->
                         <div v-if="doc.id === 'cv'"
                             class="relative rounded-2xl border p-5 cursor-pointer transition-all duration-200"
+                            :class="{ 'opacity-60 cursor-not-allowed': isInterviewFeatureLocked }"
                             :style="getDocStyle(doc)" @click="onCvCardClick" @dragover.prevent @drop="onCvDrop">
 
                             <!-- Hidden file input -->
                             <input ref="cvFileInputRef" type="file" accept="application/pdf" class="hidden"
-                                @change="onCvFileChange" />
+                                :disabled="isInterviewFeatureLocked" @change="onCvFileChange" />
 
                             <!-- Step badge -->
                             <div class="absolute top-4 left-4 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold"
@@ -169,6 +175,7 @@
                         <!-- ═══ Card JD: có logic upload ═══ -->
                         <div v-else-if="doc.id === 'job-description'"
                             class="relative rounded-2xl border p-5 cursor-pointer transition-all duration-200"
+                            :class="{ 'opacity-60 cursor-not-allowed': isInterviewFeatureLocked }"
                             :style="getJdDocStyle()" @click="jdInputMode === 'file' ? onJdCardClick() : null"
                             @dragover.prevent @drop="jdInputMode === 'file' ? onJdDrop($event) : null">
 
@@ -208,14 +215,14 @@
                                         :style="jdInputMode === 'file'
                                             ? 'background:rgba(59,130,246,0.2); border-color:rgba(59,130,246,0.35); color:#93c5fd;'
                                             : 'background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.12); color:rgba(255,255,255,0.65);'"
-                                        @click="onJdFileChange">
+                                        :disabled="isInterviewFeatureLocked" @click.stop="jdInputMode = 'file'">
                                         Upload file
                                     </button>
                                     <button class="px-2.5 py-1 rounded text-[11px] border"
                                         :style="jdInputMode === 'text'
                                             ? 'background:rgba(59,130,246,0.2); border-color:rgba(59,130,246,0.35); color:#93c5fd;'
                                             : 'background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.12); color:rgba(255,255,255,0.65);'"
-                                        @click.stop="jdInputMode = 'text'">
+                                        :disabled="isInterviewFeatureLocked" @click.stop="jdInputMode = 'text'">
                                         Dán text
                                     </button>
                                 </div>
@@ -230,7 +237,7 @@
                                     <button
                                         class="w-full px-3 py-2 rounded-lg text-[12px] font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                                         style="background:linear-gradient(90deg,#3b82f6,#2563eb); color:white;"
-                                        :disabled="!jobDescriptionText.trim() || jobDescriptionUploadState === 'uploading'"
+                                        :disabled="isInterviewFeatureLocked || !jobDescriptionText.trim() || jobDescriptionUploadState === 'uploading'"
                                         @click.stop="handleJdTextUploadRequest">
                                         Xong
                                     </button>
@@ -301,6 +308,7 @@
                         <!-- ═══ Card Company Research: có logic upload ═══ -->
                         <div v-else-if="doc.id === 'company-research'"
                             class="relative rounded-2xl border p-5 cursor-pointer transition-all duration-200"
+                            :class="{ 'opacity-60 cursor-not-allowed': isInterviewFeatureLocked }"
                             :style="getCompanyDocStyle()"
                             @click="companyInputMode === 'file' ? onCompanyCardClick() : null" @dragover.prevent
                             @drop="companyInputMode === 'file' ? onCompanyDrop($event) : null">
@@ -308,7 +316,7 @@
                             <!-- Hidden file input -->
                             <input ref="companyFileInputRef" type="file"
                                 accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
-                                class="hidden" @change="onCompanyFileChange" />
+                                class="hidden" :disabled="isInterviewFeatureLocked" @change="onCompanyFileChange" />
 
                             <!-- Step badge -->
                             <div class="absolute top-4 left-4 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold"
@@ -341,14 +349,14 @@
                                         :style="companyInputMode === 'file'
                                             ? 'background:rgba(168,85,247,0.2); border-color:rgba(168,85,247,0.35); color:#d8b4fe;'
                                             : 'background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.12); color:rgba(255,255,255,0.65);'"
-                                        @click.stop="companyInputMode = 'file'">
+                                        :disabled="isInterviewFeatureLocked" @click.stop="companyInputMode = 'file'">
                                         Upload file
                                     </button>
                                     <button class="px-2.5 py-1 rounded text-[11px] border"
                                         :style="companyInputMode === 'text'
                                             ? 'background:rgba(168,85,247,0.2); border-color:rgba(168,85,247,0.35); color:#d8b4fe;'
                                             : 'background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.12); color:rgba(255,255,255,0.65);'"
-                                        @click.stop="companyInputMode = 'text'">
+                                        :disabled="isInterviewFeatureLocked" @click.stop="companyInputMode = 'text'">
                                         Dán text
                                     </button>
                                 </div>
@@ -363,7 +371,7 @@
                                     <button
                                         class="w-full px-3 py-2 rounded-lg text-[12px] font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                                         style="background:linear-gradient(90deg,#a855f7,#9333ea); color:white;"
-                                        :disabled="!companyResearchText.trim() || companyUploadState === 'uploading'"
+                                        :disabled="isInterviewFeatureLocked || !companyResearchText.trim() || companyUploadState === 'uploading'"
                                         @click.stop="handleCompanyTextUploadRequest">
                                         Xong
                                     </button>
@@ -495,13 +503,13 @@
                     <!-- Fit analysis - using AnalysisPanel component -->
                     <div ref="analysisPanelRef">
                         <AnalysisPanel :cvReady="cvReady" :jdReady="jdReady" :cvFilePath="cvPath" :jdFilePath="jdPath"
-                            :companyFilePath="companyPath" @analysis-complete="handleAnalysisComplete"
-                            @analysis-reset="analysisReady = false" />
+                            :companyFilePath="companyPath" :can-use-interview-features="authStore.canUseInterviewFeatures"
+                            @analysis-complete="handleAnalysisComplete" @analysis-reset="analysisReady = false" />
                     </div>
 
                     <!-- Action button -->
                     <div class="flex justify-end pt-2">
-                        <button :disabled="!analysisReady || isStartingConversation" @click="startConversation"
+                        <button :disabled="isInterviewFeatureLocked || !analysisReady || isStartingConversation" @click="startConversation"
                             class="flex items-center gap-2.5 px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-200 btn-common"
                             @mouseenter="$event.currentTarget.style.transform = 'translateY(-1px)'; $event.currentTarget.style.boxShadow = '0 8px 24px rgba(79,70,229,0.55)'"
                             @mouseleave="$event.currentTarget.style.transform = ''; $event.currentTarget.style.boxShadow = '0 4px 18px rgba(79,70,229,0.4)'">
@@ -577,7 +585,7 @@
                     <!-- Hidden file input -->
                     <input ref="jdFileInputRef" type="file"
                         accept=".docx,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                        class="hidden" @change="onJdFileChange" />
+                        class="hidden" :disabled="isInterviewFeatureLocked" @change="onJdFileChange" />
                 </div>
 
             </div>
@@ -622,6 +630,8 @@ const analysisData = ref({})
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '')
 const authStore = useAuthStore()
 const router = useRouter()
+const isInterviewFeatureLocked = computed(() => !authStore.canUseInterviewFeatures)
+const lockedFeatureMessage = 'Tài khoản của bạn đang bị khóa. Bạn vẫn có thể xem lịch sử phỏng vấn và báo cáo, nhưng không thể tải tài liệu hoặc tạo phiên phỏng vấn mới.'
 
 function buildApiUrl(path) {
     const normalizedPath = path.startsWith('/') ? path : `/${path}`
@@ -644,6 +654,20 @@ function handleAnalysisComplete(data) {
     analysisData.value = data
 
     console.log('sessionId:', sessionId.value)
+}
+
+function notifyLockedFeature() {
+    ElNotification.warning({
+        title: 'Tài khoản bị khóa',
+        message: lockedFeatureMessage,
+        duration: 4000,
+    })
+}
+
+function ensureCanUseInterviewFeatures() {
+    if (!isInterviewFeatureLocked.value) return true
+    notifyLockedFeature()
+    return false
 }
 
 // ── Steps ────────────────────────────────────────────────────────────────────
@@ -767,6 +791,8 @@ const cvReady = computed(() => cvUploadState.value === 'success')
 const jdReady = computed(() => jobDescriptionUploadState.value === 'success')
 
 function onCvCardClick() {
+    if (!ensureCanUseInterviewFeatures()) return
+
     const el = cvFileInputRef.value
     // kiểm tra chắc chắn là DOM element có method click
     if ((cvUploadState.value === 'idle' || cvUploadState.value === 'error') && el && typeof el.click === 'function') {
@@ -785,6 +811,7 @@ function onCvCardClick() {
 }
 
 async function handleCvUpload(file) {
+    if (!ensureCanUseInterviewFeatures()) return
     if (!file) return
     if (file.type !== 'application/pdf') {
         cvUploadState.value = 'error'
@@ -843,12 +870,14 @@ async function handleCvUpload(file) {
 }
 
 function onCvFileChange(e) {
+    if (!ensureCanUseInterviewFeatures()) return
     const file = e.target.files?.[0]
     if (file) handleCvUpload(file)
 }
 
 function onCvDrop(e) {
     e.preventDefault()
+    if (!ensureCanUseInterviewFeatures()) return
     const file = e.dataTransfer.files?.[0]
     if (file) handleCvUpload(file)
 }
@@ -917,6 +946,8 @@ async function getInforInterview(id_session) {
 }
 
 async function startConversation() {
+    if (!ensureCanUseInterviewFeatures()) return
+
     if (!cvPath.value || !jdPath.value) {
         ElNotification.warning({
             title: 'Thiếu tài liệu',
@@ -1039,6 +1070,8 @@ function getCompanyDocStyle() {
 }
 
 function onJdCardClick() {
+    if (!ensureCanUseInterviewFeatures()) return
+
     const el = jdFileInputRef.value
     if ((jobDescriptionUploadState.value === 'idle' || jobDescriptionUploadState.value === 'error') && el && typeof el.click === 'function') {
         el.click()
@@ -1055,6 +1088,7 @@ function onJdCardClick() {
 }
 
 function onJdFileChange(e) {
+    if (!ensureCanUseInterviewFeatures()) return
     jdInputMode.value = 'file'
     const file = e.target.files?.[0]
     console.log('🔍 onJdFileChange called, file:', file?.name)
@@ -1063,12 +1097,14 @@ function onJdFileChange(e) {
 
 function onJdDrop(e) {
     e.preventDefault()
+    if (!ensureCanUseInterviewFeatures()) return
     const file = e.dataTransfer.files?.[0]
     console.log('🔍 onJdDrop called, file:', file?.name)
     if (file) handleJdFileUploadRequest(file)
 }
 
 async function handleJdFileUploadRequest(file) {
+    if (!ensureCanUseInterviewFeatures()) return
     console.log('▶️ handleJdFileUploadRequest started, file:', file?.name)
     if (!file) return
 
@@ -1143,6 +1179,8 @@ async function handleJdFileUploadRequest(file) {
 }
 
 async function handleJdTextUploadRequest() {
+    if (!ensureCanUseInterviewFeatures()) return
+
     const text = jobDescriptionText.value.trim()
     if (!text) {
         ElNotification.warning({
@@ -1188,6 +1226,8 @@ async function handleJdTextUploadRequest() {
 }
 
 function onCompanyCardClick() {
+    if (!ensureCanUseInterviewFeatures()) return
+
     const el = companyFileInputRef.value
     if ((companyUploadState.value === 'idle' || companyUploadState.value === 'error') && el && typeof el.click === 'function') {
         el.click()
@@ -1204,6 +1244,7 @@ function onCompanyCardClick() {
 }
 
 function onCompanyFileChange(e) {
+    if (!ensureCanUseInterviewFeatures()) return
     const file = e.target.files?.[0]
     console.log('onCompanyFileChange called, file:', file?.name)
     if (file) handleCompanyFileUploadRequest(file)
@@ -1211,12 +1252,14 @@ function onCompanyFileChange(e) {
 
 function onCompanyDrop(e) {
     e.preventDefault()
+    if (!ensureCanUseInterviewFeatures()) return
     const file = e.dataTransfer.files?.[0]
     console.log('onCompanyDrop called, file:', file?.name)
     if (file) handleCompanyFileUploadRequest(file)
 }
 
 async function handleCompanyFileUploadRequest(file) {
+    if (!ensureCanUseInterviewFeatures()) return
     console.log('handleCompanyFileUploadRequest started, file:', file?.name)
     if (!file) return
 
@@ -1266,6 +1309,8 @@ async function handleCompanyFileUploadRequest(file) {
 }
 
 async function handleCompanyTextUploadRequest() {
+    if (!ensureCanUseInterviewFeatures()) return
+
     const text = companyResearchText.value.trim()
     if (!text) {
         ElNotification.error({

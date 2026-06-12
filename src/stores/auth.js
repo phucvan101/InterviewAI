@@ -93,6 +93,25 @@ export const useAuthStore = defineStore('auth', () => {
     return result
   }
 
+  function isLockedAccount(userData) {
+    if (!userData) return false
+
+    const rawStatus = String(
+      userData.status ??
+      userData.account_status ??
+      userData.accountStatus ??
+      ''
+    ).toLowerCase()
+
+    return (
+      userData.is_deleted === true ||
+      userData.is_deleted === 1 ||
+      userData.is_active === false ||
+      userData.is_active === 0 ||
+      ['inactive', 'deactivated', 'locked', 'suspended', 'disabled', 'blocked'].includes(rawStatus)
+    )
+  }
+
   function extractTokensFromParams(params) {
     if (!params) return null
 
@@ -277,7 +296,9 @@ export const useAuthStore = defineStore('auth', () => {
       ...headers,
     }
 
-    if (body !== undefined) {
+    const isFormData = typeof FormData !== 'undefined' && body instanceof FormData
+
+    if (body !== undefined && !isFormData) {
       requestHeaders['Content-Type'] = requestHeaders['Content-Type'] || 'application/json'
     }
 
@@ -324,6 +345,8 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isLoggedIn = computed(() => !!token.value)
   const userName = computed(() => user.value?.full_name || user.value?.name || 'Guest')
+  const isAccountLocked = computed(() => isLockedAccount(user.value))
+  const canUseInterviewFeatures = computed(() => !isAccountLocked.value)
   const userPermissions = computed(() => {
     return Array.from(collectPermissionCodes(user.value))
   })
@@ -568,6 +591,8 @@ export const useAuthStore = defineStore('auth', () => {
     refreshToken,
     loading,
     isLoggedIn, userName,
+    isAccountLocked,
+    canUseInterviewFeatures,
     userPermissions,
     isSuperUser,
     hasPermission,
