@@ -34,12 +34,16 @@
 
         <!-- User -->
         <div class="flex items-center gap-3 px-4 py-4 border-t" style="border-color:rgba(255,255,255,0.06);">
-            <img :src="`https://i.pravatar.cc/40?u=${auth.user?.email || 'default'}`"
-                class="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+            <img v-if="auth.user.avatar_url" :src="auth.user.avatar_url" :alt="auth.userName"
+                class="h-10 w-10 rounded-full border border-white/10 object-cover" />
+            <div v-else
+                class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#4f46e5]/30 to-[#4338ca]/30 text-xs font-black text-[#a5b4fc]">
+                {{ getInitials(auth.userName) }}
+            </div>
             <div class="flex-1 min-w-0">
                 <div class="text-[12.5px] font-semibold text-white truncate">{{ auth.userName }}</div>
-                <div class="text-[10.5px] truncate" style="color:rgba(255,255,255,0.38);">{{ auth.user?.email || 'Khách'
-                }}</div>
+                <div class="text-[10.5px] truncate" style="color:rgba(255,255,255,0.38);">{{ auth.user?.email }}
+                </div>
             </div>
             <button @click="handleLogout"
                 class="w-7 h-7 flex items-center justify-center rounded-lg transition-colors hover:bg-white/10"
@@ -120,6 +124,8 @@ const visibleNavItems = computed(() => {
     return navItems.value.filter((item) => auth.hasAnyPermission(item.permissions))
 })
 
+console.log('auth', auth.user, auth.permissionsa)
+
 const handleLogout = () => {
     auth.logout()
     router.push('/')
@@ -130,5 +136,15 @@ const isActive = (item) => {
         route.path === item.route ||
         route.path.startsWith(item.route + '/')
     )
+}
+
+function getInitials(name = '') {
+    return String(name)
+        .trim()
+        .split(/\s+/)
+        .map((word) => word[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase() || 'U'
 }
 </script>

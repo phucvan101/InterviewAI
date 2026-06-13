@@ -345,8 +345,11 @@ onMounted(fetchSessions)
                     <div v-for="session in sessions" :key="session.id"
                         class="grid grid-cols-[2fr_1.8fr_1.2fr_1fr_1.5fr_1fr] gap-4 px-6 py-5 border-b border-white/5 last:border-b-0 hover:bg-white/[0.02] transition-colors group">
                         <div class="flex items-center gap-3 min-w-0">
-                            <div
-                                :class="`w-10 h-10 rounded-full bg-gradient-to-br ${getAvatarColor(session.candidate.username)} flex items-center justify-center text-xs font-bold text-white flex-shrink-0 ring-2 ring-white/5`">
+                            <img v-if="session.candidate.avatar_url" :src="session.candidate.avatar_url"
+                                :alt="session.candidate.username"
+                                class="h-10 w-10 rounded-full border border-white/10 object-cover" />
+                            <div v-else
+                                class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#4f46e5]/30 to-[#4338ca]/30 text-xs font-black text-[#a5b4fc]">
                                 {{ getInitials(session.candidate.username) }}
                             </div>
                             <div class="min-w-0">

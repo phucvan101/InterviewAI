@@ -66,6 +66,12 @@
                         <div>{{ (pagination.page - 1) * pagination.limit + index + 1 }}</div>
                         <div class="text-center">{{ user.username }}</div>
                         <div class="flex items-center gap-3 min-w-0">
+                            <img v-if="user.avatar_url" :src="user.avatar_url" :alt="user.username"
+                                class="h-10 w-10 rounded-full border border-white/10 object-cover" />
+                            <div v-else
+                                class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#4f46e5]/30 to-[#4338ca]/30 text-xs font-black text-[#a5b4fc]">
+                                {{ getInitials(user.username) }}
+                            </div>
                             <div class="min-w-0">
                                 <div class="font-semibold truncate">{{ user.name }}</div>
                                 <div class="text-sm text-gray-400 truncate">{{ user.email }}</div>
@@ -338,6 +344,10 @@ const planClass = (plan) => {
         default:
             return 'border-gray-500 text-gray-400 bg-gray-500/10'
     }
+}
+
+function getInitials(name) {
+    return name.split(' ').map(w => w[0]).slice(-2).join('').toUpperCase()
 }
 
 async function loadUsers(page = 1) {

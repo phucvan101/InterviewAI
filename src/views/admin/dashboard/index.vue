@@ -46,7 +46,7 @@
                     <p class="text-xs font-bold uppercase tracking-widest text-slate-500">{{ card.label }}</p>
                     <div class="mt-2 flex items-baseline gap-1.5">
                         <strong class="text-[2.4rem] font-black leading-none tracking-tight text-white">{{ card.value
-                            }}</strong>
+                        }}</strong>
                         <span v-if="card.suffix" class="text-base font-semibold text-slate-500">{{ card.suffix }}</span>
                     </div>
                 </article>
@@ -116,6 +116,14 @@
                                     class="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-400 text-[9px] font-black text-amber-900">
                                     1
                                 </span>
+                                <span v-else-if="index === 1"
+                                    class="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-slate-300 text-[9px] font-black text-slate-900">
+                                    2
+                                </span>
+                                <span v-else-if="index === 2"
+                                    class="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-200 text-[9px] font-black text-amber-900">
+                                    3
+                                </span>
                             </div>
                             <div class="min-w-0 flex-1">
                                 <p class="truncate text-sm font-bold text-white">{{ user.name }}</p>
@@ -133,17 +141,17 @@
                         <p class="text-sm font-semibold text-slate-500">Chưa có dữ liệu người dùng</p>
                     </div>
 
-                    <div class="mt-6 border-t border-white/6 pt-5">
-                        <div class="flex items-center gap-3">
-                            <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-white/8">
-                                <div class="h-full rounded-full transition-all duration-700"
-                                    :class="utilizationBarColor" :style="{ width: utilizationWidth }">
+                    <!-- <div class="mt-6 border-t border-white/6 pt-5">
+                            <div class="flex items-center gap-3">
+                                <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-white/8">
+                                    <div class="h-full rounded-full transition-all duration-700"
+                                        :class="utilizationBarColor" :style="{ width: utilizationWidth }">
+                                    </div>
                                 </div>
+                                <span class="text-xs font-bold" :class="utilizationColor">{{ utilizationLabel }}</span>
                             </div>
-                            <span class="text-xs font-bold" :class="utilizationColor">{{ utilizationLabel }}</span>
-                        </div>
-                        <p class="mt-2 text-xs text-slate-600">System utilization</p>
-                    </div>
+                            <p class="mt-2 text-xs text-slate-600">System utilization</p>
+                        </div> -->
                 </aside>
             </section>
         </div>

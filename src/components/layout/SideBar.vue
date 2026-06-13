@@ -47,14 +47,19 @@
 
         <!-- User -->
         <div class="flex items-center gap-3 px-4 py-4 border-t" style="border-color:rgba(255,255,255,0.06);">
-            <button @click="showUserProfile = true" class="relative group cursor-pointer focus:outline-none" title="Xem thông tin cá nhân">
-                <img :src="`https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${auth.user?.email || 'default'}&backgroundColor=0f1225`"
-                    class="w-9 h-9 rounded-full object-cover flex-shrink-0 transition-transform duration-200 group-hover:scale-105 border border-white/10 bg-white/5 p-[1px]" />
+            <button @click="showUserProfile = true" class="relative group cursor-pointer focus:outline-none"
+                title="Xem thông tin cá nhân">
+                <img v-if="auth.user.avatar_url" :src="auth.user.avatar_url" :alt="auth.userName"
+                    class="h-10 w-10 rounded-full border border-white/10 object-cover" />
+                <div v-else
+                    class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#4f46e5]/30 to-[#4338ca]/30 text-xs font-black text-[#a5b4fc]">
+                    {{ getInitials(auth.userName) }}
+                </div>
             </button>
             <div class="flex-1 min-w-0 cursor-pointer" @click="showUserProfile = true" title="Xem thông tin cá nhân">
                 <div class="text-[12.5px] font-semibold text-white truncate hover:underline">{{ auth.userName }}</div>
                 <div class="text-[10.5px] truncate" style="color:rgba(255,255,255,0.38);">{{ auth.user?.email || 'Khách'
-                    }}</div>
+                }}</div>
             </div>
             <div class="flex gap-1">
                 <button v-if="auth.user?.auth_provider !== 'google'" @click="showChangePassword = true"
@@ -77,14 +82,8 @@
             </div>
         </div>
 
-        <ChangePasswordModal 
-            v-if="showChangePassword" 
-            @close="showChangePassword = false" 
-        />
-        <UserProfileModal 
-            v-if="showUserProfile" 
-            @close="showUserProfile = false" 
-        />
+        <ChangePasswordModal v-if="showChangePassword" @close="showChangePassword = false" />
+        <UserProfileModal v-if="showUserProfile" @close="showUserProfile = false" />
     </aside>
 </template>
 
@@ -193,5 +192,15 @@ console.log('user', auth.user);
 const handleLogout = () => {
     auth.logout()
     router.push('/')
+}
+
+function getInitials(name = '') {
+    return String(name)
+        .trim()
+        .split(/\s+/)
+        .map((word) => word[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase() || 'U'
 }
 </script>

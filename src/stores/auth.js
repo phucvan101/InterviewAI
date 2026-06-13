@@ -580,6 +580,61 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function authorizedStreamRequest(path, options = {}) {
+    const {
+      method = 'GET',
+      body,
+      retryOn401 = true,
+      headers = {},
+      signal,
+    } = options
+
+    const currentTokens = syncTokensFromStorage()
+    const requestHeaders = { ...headers }
+    const isFormData = typeof FormData !== 'undefined' && body instanceof FormData
+    let requestBody = body
+
+    if (body !== undefined && !isFormData && !(body instanceof Blob)) {
+      requestHeaders['Content-Type'] = requestHeaders['Content-Type'] || 'application/json'
+      requestBody = typeof body === 'string' ? body : JSON.stringify(body)
+    }
+
+    if (currentTokens.accessToken) {
+      requestHeaders.Authorization = `Bearer ${currentTokens.accessToken}`
+    }
+
+    const response = await fetch(buildUrl(path), {
+      method,
+      headers: requestHeaders,
+      body: requestBody,
+      signal,
+    })
+
+    if (response.status === 401 && retryOn401 && currentTokens.refreshToken) {
+      await refreshAccessToken()
+      return authorizedStreamRequest(path, { ...options, retryOn401: false })
+    }
+
+    if (!response.ok) {
+      let data = null
+      try {
+        const contentType = response.headers.get('content-type') || ''
+        data = contentType.includes('application/json')
+          ? await response.json()
+          : await response.text()
+      } catch (_) {
+        data = null
+      }
+
+      const error = new Error(getErrorMessage(data, 'Không thể tải dữ liệu.'))
+      error.status = response.status
+      error.data = data
+      throw error
+    }
+
+    return response
+  }
+
   async function logout() {
     saveTokens(null, null)
     user.value = null
@@ -608,6 +663,7 @@ export const useAuthStore = defineStore('auth', () => {
     forgotPassword,
     authorizedRequest,
     authorizedBlobRequest,
+    authorizedStreamRequest,
     logout,
   }
 })

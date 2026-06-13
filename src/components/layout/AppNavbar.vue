@@ -20,15 +20,17 @@
 
                 <!-- Right -->
                 <div class="flex items-center gap-3">
-                    <RouterLink to="/login" class="nav-link hidden md:block">
+                    <RouterLink to="/login"
+                        class="hidden md:inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white transition-all duration-200"
+                        style="background: var(--primary);">
                         Đăng nhập
                     </RouterLink>
 
-                    <RouterLink to="/"
+                    <!-- <RouterLink to="/"
                         class="hidden md:inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white transition-all duration-200"
                         style="background: var(--primary);">
                         Bắt đầu ngay
-                    </RouterLink>
+                    </RouterLink> -->
 
                     <button class="md:hidden p-2 rounded-lg" style="color: var(--text-muted);"
                         @click="mobileMenuOpen = !mobileMenuOpen">
@@ -60,9 +62,9 @@ import { RouterLink } from "vue-router"
 const mobileMenuOpen = ref(false)
 
 const navLinks = [
-    { to: "/", label: "Cách hoạt động" },
+    { to: "/", label: "" },
     // { to: "/webrtc", label: "Tính năng" },
-    { to: "/speech", label: "Bảng giá" },
+    // { to: "/speech", label: "Bảng giá" },
     // { to: "/about", label: "Giới thiệu" },
 ]
 </script>

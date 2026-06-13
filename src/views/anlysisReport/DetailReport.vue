@@ -392,7 +392,7 @@ const sendCV = async () => {
         if (res.success) {
             ElNotification.success({
                 title: 'Thành công',
-                message: 'CV của bạn đã được gửi đi thành công!',
+                message: res.message,
             })
         } else {
             ElNotification.error({

@@ -71,6 +71,7 @@ const recorder = ref(null)
 const recorderStream = ref(null)
 const audioChunks = ref([])
 const currentAudio = ref(null)
+const currentTtsAbortController = ref(null)
 
 // ─── Computed ─────────────────────────────────────────────────────────────────
 const isHistoryMode = computed(() => !route.params.sessionId)
@@ -148,8 +149,8 @@ async function apiRequest(path, options = {}) {
     return authStore.authorizedRequest(path, options)
 }
 
-async function apiBlobRequest(path, options = {}) {
-    return authStore.authorizedBlobRequest(path, options)
+async function apiStreamRequest(path, options = {}) {
+    return authStore.authorizedStreamRequest(path, options)
 }
 
 // ─── History ──────────────────────────────────────────────────────────────────
@@ -258,7 +259,7 @@ async function getNextQuestion() {
             `/api/v1/conversations/${sessionId.value}/next-question`,
             { method: 'POST' }
         )
-        appendInterviewerQuestion(response)
+        await appendInterviewerQuestion(response)
     })
 }
 
@@ -279,7 +280,7 @@ async function sendAnswer(answer) {
             `/api/v1/conversations/${sessionId.value}/answer`,
             { method: 'POST', body: { answer: text } }
         )
-        appendInterviewerQuestion(response)
+        await appendInterviewerQuestion(response)
     })
 }
 
@@ -336,17 +337,17 @@ async function withAiLoading(task) {
     }
 }
 
-function appendInterviewerQuestion(response) {
+async function appendInterviewerQuestion(response) {
     const payload = response?.data || response || {}
     const question = payload.question || payload.content || payload.message
     if (!question) return
+    await speakQuestion(question)
     messages.value.push({
         role: 'interviewer',
         content: question,
         message_id: payload.message_id,
         created_at: new Date().toISOString(),
     })
-    speakQuestion(question)
 }
 
 async function toggleListening() {
@@ -425,29 +426,153 @@ async function uploadRecordedAudio() {
 async function speakQuestion(text) {
     if (!text) return
 
+    stopSpeaking()
+    const abortController = new AbortController()
+    currentTtsAbortController.value = abortController
+
     try {
-        stopSpeaking()
-        const audioBlob = await apiBlobRequest('/api/v1/speech/tts', {
+        const response = await apiStreamRequest('/api/v1/speech/tts', {
             method: 'POST',
+            headers: { Accept: 'audio/mpeg' },
             body: { text },
+            signal: abortController.signal,
         })
-        const audioUrl = URL.createObjectURL(audioBlob)
-        const audio = new Audio(audioUrl)
-        currentAudio.value = { audio, audioUrl }
-        audio.onended = stopSpeaking
-        audio.onerror = stopSpeaking
-        await audio.play()
+
+        await playStreamingAudio(response, abortController)
     } catch (err) {
         stopSpeaking()
+        if (err.name === 'AbortError') throw err
         console.warn('Không thể phát giọng đọc AI:', err)
+        throw err
     }
 }
 
 function stopSpeaking() {
+    currentTtsAbortController.value?.abort()
+    currentTtsAbortController.value = null
+
     if (!currentAudio.value) return
-    currentAudio.value.audio.pause()
-    URL.revokeObjectURL(currentAudio.value.audioUrl)
+    currentAudio.value.audio?.pause()
+    if (currentAudio.value.audioUrl) {
+        URL.revokeObjectURL(currentAudio.value.audioUrl)
+    }
     currentAudio.value = null
+}
+
+async function playStreamingAudio(response, abortController) {
+    const contentType = normalizeAudioContentType(response.headers.get('content-type'))
+
+    if (!response.body || !canUseMediaSource(contentType)) {
+        const audioBlob = await response.blob()
+        return playAudioUrl(URL.createObjectURL(audioBlob), abortController)
+    }
+
+    const mediaSource = new MediaSource()
+    const audioUrl = URL.createObjectURL(mediaSource)
+    const audio = playAudioUrl(audioUrl, abortController)
+
+    await new Promise((resolve, reject) => {
+        const reader = response.body.getReader()
+        const queue = []
+        let sourceBuffer = null
+        let streamDone = false
+        let cleaned = false
+        let started = false
+
+        const cleanup = () => {
+            if (cleaned) return
+            cleaned = true
+            mediaSource.removeEventListener('sourceopen', onSourceOpen)
+            sourceBuffer?.removeEventListener('updateend', appendNextChunk)
+            sourceBuffer?.removeEventListener('error', rejectIfActive)
+            try {
+                reader.releaseLock()
+            } catch (_) {}
+        }
+
+        const rejectIfActive = (error) => {
+            cleanup()
+            if (started) {
+                if (error.name !== 'AbortError') console.warn('Luồng TTS bị gián đoạn:', error)
+                return
+            }
+            reject(error)
+        }
+
+        const appendNextChunk = () => {
+            try {
+                if (!sourceBuffer || sourceBuffer.updating) return
+
+                if (queue.length) {
+                    sourceBuffer.appendBuffer(queue.shift())
+                    return
+                }
+
+                if (streamDone && mediaSource.readyState === 'open') {
+                    mediaSource.endOfStream()
+                    cleanup()
+                }
+            } catch (error) {
+                rejectIfActive(error)
+            }
+        }
+
+        const pump = async () => {
+            try {
+                while (true) {
+                    const { done, value } = await reader.read()
+                    if (done) {
+                        streamDone = true
+                        appendNextChunk()
+                        return
+                    }
+
+                    queue.push(value)
+                    appendNextChunk()
+                }
+            } catch (error) {
+                rejectIfActive(error)
+            }
+        }
+
+        function onSourceOpen() {
+            try {
+                sourceBuffer = mediaSource.addSourceBuffer(contentType)
+                sourceBuffer.mode = 'sequence'
+                sourceBuffer.addEventListener('updateend', appendNextChunk)
+                sourceBuffer.addEventListener('error', rejectIfActive)
+                pump()
+                started = true
+                resolve()
+            } catch (error) {
+                rejectIfActive(error)
+            }
+        }
+
+        mediaSource.addEventListener('sourceopen', onSourceOpen, { once: true })
+    })
+}
+
+function playAudioUrl(audioUrl, abortController) {
+    const audio = new Audio(audioUrl)
+    currentAudio.value = { audio, audioUrl, abortController }
+    audio.onended = stopSpeaking
+    audio.onerror = stopSpeaking
+    audio.play().catch(error => {
+        if (error.name !== 'AbortError') console.warn('Không thể bắt đầu phát audio:', error)
+    })
+    return audio
+}
+
+function normalizeAudioContentType(contentType = '') {
+    const normalized = contentType.split(';')[0].trim().toLowerCase()
+    if (normalized === 'audio/mp3') return 'audio/mpeg'
+    return normalized || 'audio/mpeg'
+}
+
+function canUseMediaSource(contentType) {
+    return typeof MediaSource !== 'undefined'
+        && MediaSource.isTypeSupported?.(contentType)
 }
 
 function cleanupRecorder() {
