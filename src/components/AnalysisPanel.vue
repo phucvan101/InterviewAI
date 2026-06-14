@@ -433,8 +433,8 @@
               <p class="text-xl font-black" style="color:#4ade80;">{{ getExpDetailMetric('project_relevance') }}</p>
             </div>
             <div class="rounded-lg p-3" style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);">
-              <p class="text-[11px] mb-1" style="color:rgba(255,255,255,0.4);">Bonus</p>
-              <p class="text-xl font-black" style="color:#fbbf24;">{{ getExpDetailMetric('bonus') }}</p>
+              <p class="text-[11px] mb-1" style="color:rgba(255,255,255,0.4);">Year of experience</p>
+              <p class="text-xl font-black" style="color:#fbbf24;">{{ getExpDetailMetric('years_of_experience') }}</p>
             </div>
           </div>
 
@@ -453,18 +453,50 @@
             </p>
           </div>
 
+          <!-- Highlights / Achievements list -->
+          <div v-if="getExpDetailHighlights()?.length" class="mb-4">
+            <h5 class="text-xs font-semibold mb-2" style="color:rgba(255,255,255,0.5);">Thành tựu & Điểm nhấn nổi bật</h5>
+            <div class="space-y-2">
+              <div v-for="(highlight, idx) in getExpDetailHighlights()" :key="idx"
+                class="flex items-start gap-2 rounded-lg px-3 py-2"
+                style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.15);">
+                <span class="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+                  style="background:rgba(16,185,129,0.2); color:#34d399;">
+                  ✓
+                </span>
+                <span class="text-[12px] text-white leading-relaxed">{{ highlight }}</span>
+              </div>
+            </div>
+          </div>
+
           <!-- Projects list -->
           <div v-if="getExpDetailProjects()?.length">
             <h5 class="text-xs font-semibold mb-2" style="color:rgba(255,255,255,0.5);">Dự án</h5>
-            <div class="space-y-2">
+            <div class="space-y-3">
               <div v-for="(project, idx) in getExpDetailProjects()" :key="idx"
-                class="flex items-start gap-2 rounded-lg px-3 py-2"
+                class="rounded-lg p-3"
                 style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06);">
-                <span class="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
-                  style="background:rgba(59,130,246,0.2); color:#60a5fa;">
-                  {{ idx + 1 }}
-                </span>
-                <span class="text-[12px] text-white">{{ project }}</span>
+                <div class="flex items-center justify-between gap-2 mb-1.5">
+                  <div class="flex items-center gap-2">
+                    <span class="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+                      style="background:rgba(59,130,246,0.2); color:#60a5fa;">
+                      {{ idx + 1 }}
+                    </span>
+                    <span class="text-[13px] font-bold text-white">
+                      {{ typeof project === 'object' ? project.name : project }}
+                    </span>
+                  </div>
+                  <span v-if="typeof project === 'object' && project.relevance" 
+                    class="text-[10px] px-1.5 py-0.5 rounded font-medium"
+                    style="background:rgba(74,222,128,0.15); color:#4ade80;">
+                    Độ tương thích: {{ project.relevance }}%
+                  </span>
+                </div>
+                <p v-if="typeof project === 'object' && project.description" 
+                  class="text-[11px] leading-relaxed mt-1 pl-7" 
+                  style="color:rgba(255,255,255,0.6);">
+                  {{ project.description }}
+                </p>
               </div>
             </div>
           </div>
@@ -674,7 +706,10 @@ function getExpDetailMetric(metric) {
     if (metric === 'score') return getMetricValue(detail, 'years_score') || 0
     if (metric === 'seniority') return getMetricValue(detail, 'seniority') || '—'
     if (metric === 'project_relevance') return getMetricValue(detail, 'project_relevance') || '—'
-    if (metric === 'bonus') return getMetricValue(detail, 'bonus') || '—'
+    if (metric === 'years_of_experience') {
+      const work = getMetricValue(detail, 'work_years')
+      return work !== null && work !== undefined ? `${work} năm` : '—'
+    }
     if (metric === 'jd_level') return '—'
     return '—'
   }
@@ -682,9 +717,12 @@ function getExpDetailMetric(metric) {
   if (metric === 'jd_level') return detail.jd_required_level || '—'
   if (metric === 'project_relevance') {
     const avg = detail.project_relevance_avg
-    return avg ? `${(avg * 100).toFixed(0)}%` : '—'
+    return avg ? `${Number(avg).toFixed(0)}%` : '—'
   }
-  if (metric === 'bonus') return detail.bonus_val || 0
+  if (metric === 'years_of_experience') {
+    const work = detail.years_of_experience !== undefined ? detail.years_of_experience : detail.years_detail?.work_years
+    return work !== null && work !== undefined ? `${work} năm` : '—'
+  }
   return '—'
 }
 
@@ -711,6 +749,12 @@ function getExpDetailProjects() {
   if (!detail) return []
   if (typeof detail === 'string') return getProjects(detail)
   return detail.projects || []
+}
+
+function getExpDetailHighlights() {
+  const detail = analysisData.value?.experience_detail
+  if (!detail || typeof detail === 'string') return []
+  return detail.highlights || []
 }
 
 const detailTabs = [
