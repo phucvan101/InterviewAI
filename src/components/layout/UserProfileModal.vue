@@ -177,7 +177,7 @@ const saveProfile = async () => {
     // Chuẩn bị payload, mapping các key cho phù hợp với API BE
     const payload = {
       full_name: formData.value.full_name,
-      user_name: formData.value.user_name,
+      username: formData.value.user_name,
       // name: formData.value.full_name, // Nếu backend dùng 'name' thay vì 'full_name'
     }
     
