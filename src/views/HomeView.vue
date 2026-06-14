@@ -26,13 +26,12 @@
         </h1>
 
         <p class="mx-auto mb-10 max-w-2xl text-base leading-relaxed sm:text-lg" style="color: var(--text-muted);">
-          Tải lên CV của bạn, dán mô tả công việc và để AI được hỗ trợ bởi
-          RAG của chúng tôi mô phỏng môi trường phỏng vấn hoàn hảo được
+          Tải lên CV của bạn, dán mô tả công việc và để AI của chúng tôi mô phỏng môi trường phỏng vấn hoàn hảo được
           thiết kế dành riêng cho bạn.
         </p>
 
         <div class="flex flex-wrap items-center justify-center gap-4">
-          <RouterLink to="/webrtc"
+          <RouterLink to="/login"
             class="inline-flex items-center justify-center gap-2 rounded-2xl px-8 py-4 text-base font-bold text-white transition-all duration-200"
             style="background: var(--primary);"
             onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 10px 32px rgba(109,67,245,0.5)'"
@@ -208,7 +207,7 @@
         <p class="text-base mb-6" style="color: rgba(255,255,255,0.8);">
           Tham gia cùng hàng ngàn ứng viên đang được hỗ trợ bởi AI để đạt được công việc mơ ước.
         </p>
-        <RouterLink to="/signup"
+        <RouterLink to="/login"
           class="inline-block px-8 py-4 rounded-2xl font-bold text-white transition-all duration-200"
           style="background: linear-gradient(90deg,#5048E5,#1e3a8a); box-shadow: 0 10px 30px rgba(109,67,245,0.22);"
           onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 14px 36px rgba(109,67,245,0.4)'"
