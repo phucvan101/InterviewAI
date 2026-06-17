@@ -487,7 +487,7 @@ async function playStreamingAudio(response, abortController) {
             sourceBuffer?.removeEventListener('error', rejectIfActive)
             try {
                 reader.releaseLock()
-            } catch (_) {}
+            } catch (_) { }
         }
 
         const rejectIfActive = (error) => {

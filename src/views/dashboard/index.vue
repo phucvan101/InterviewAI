@@ -503,13 +503,15 @@
                     <!-- Fit analysis - using AnalysisPanel component -->
                     <div ref="analysisPanelRef">
                         <AnalysisPanel :cvReady="cvReady" :jdReady="jdReady" :cvFilePath="cvPath" :jdFilePath="jdPath"
-                            :companyFilePath="companyPath" :can-use-interview-features="authStore.canUseInterviewFeatures"
+                            :companyFilePath="companyPath"
+                            :can-use-interview-features="authStore.canUseInterviewFeatures"
                             @analysis-complete="handleAnalysisComplete" @analysis-reset="analysisReady = false" />
                     </div>
 
                     <!-- Action button -->
                     <div class="flex justify-end pt-2">
-                        <button :disabled="isInterviewFeatureLocked || !analysisReady || isStartingConversation" @click="startConversation"
+                        <button :disabled="isInterviewFeatureLocked || !analysisReady || isStartingConversation"
+                            @click="startConversation"
                             class="flex items-center gap-2.5 px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-200 btn-common"
                             @mouseenter="$event.currentTarget.style.transform = 'translateY(-1px)'; $event.currentTarget.style.boxShadow = '0 8px 24px rgba(79,70,229,0.55)'"
                             @mouseleave="$event.currentTarget.style.transform = ''; $event.currentTarget.style.boxShadow = '0 4px 18px rgba(79,70,229,0.4)'">
@@ -1387,7 +1389,7 @@ watch(sessionId, async (newSessionId) => {
     await getInforInterview(newSessionId)  // await để đảm bảo xong mới check
 
     // Kiểm tra null-safe trước khi truy cập
-    const overallScore = analysisData.value?.analysis.overall_score
+    const overallScore = analysisData.value?.analysis.data.overall_score
 
     console.log('overall_score:', overallScore)
     console.log('analysisData:', analysisData.value)

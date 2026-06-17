@@ -72,13 +72,11 @@
                 <!--Login-->
                 <!-- Header -->
                 <div v-if="isForgotPasswordMode">
-                    <ForgotPasswordForm 
-                        @back-to-login="isForgotPasswordMode = false" 
-                    />
+                    <ForgotPasswordForm @back-to-login="isForgotPasswordMode = false" />
                 </div>
                 <div v-else-if="!isRegisterMode">
-                    <LoginForm @submit="handleLogin" @switch="switchToRegister" @oauth="handleOAuth" @forgot="isForgotPasswordMode = true"
-                        :isLoading="isLoading" />
+                    <LoginForm @submit="handleLogin" @switch="switchToRegister" @oauth="handleOAuth"
+                        @forgot="isForgotPasswordMode = true" :isLoading="isLoading" />
                 </div>
 
                 <div v-else>
@@ -112,7 +110,7 @@ const errorMessage = ref('')
 const stats = [
     { num: '50K+', label: 'Ứng viên' },
     { num: '98%', label: 'Hài lòng' },
-    { num: 'GPT-4o', label: 'Công nghệ' },
+    { num: 'GPT-4o-mini', label: 'Công nghệ' },
 ]
 
 async function handleLogin(payload) {
