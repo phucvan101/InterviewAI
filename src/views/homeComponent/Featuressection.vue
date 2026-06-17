@@ -1,6 +1,6 @@
 <template>
     <!-- ── Features Section ── -->
-    <section ref="sectionRef" class="mx-auto px-6 py-24 lg:px-24 min-h-screen"
+    <section id="features" ref="sectionRef" class="mx-auto scroll-mt-20 px-6 py-24 lg:px-24 min-h-screen"
         style="background: var(--bg-linear-gradient);">
 
         <!-- Header -->
@@ -92,7 +92,7 @@ import lich_su from '../../assets/icon/home/lich_su.svg'
 
 // ── Data ──
 const features = [
-    { icon: phan_hoi, title: 'Phỏng vấn giọng nói thực tế', desc: 'AI lắng nghe và phản hồi bằng giọng nói GPT-4o, tạo cảm giác phỏng vấn thực tế 100%.', bg_color: 'rgba(30,58,138,0.35)' },
+    { icon: phan_hoi, title: 'Phỏng vấn giọng nói thực tế', desc: 'AI lắng nghe và phản hồi bằng giọng nói GPT-4o-mini, tạo cảm giác phỏng vấn thực tế 100%.', bg_color: 'rgba(30,58,138,0.35)' },
     { icon: goi_y, title: 'Cá nhân hóa từ CV của bạn', desc: 'Upload CV và JD, AI sẽ sinh câu hỏi phù hợp với kinh nghiệm và vai trò bạn apply.', bg_color: 'rgba(88,28,135,0.35)' },
     { icon: hieu_suat, title: 'Chỉ số hiệu suất', desc: 'Phân tích chi tiết về kỹ năng chuyên môn, sự tự tin, kỹ năng mềm, giao tiếp và kiến thức về công ty.', bg_color: 'rgba(20,83,45,0.35)' },
     { icon: phan_tich_giong_noi, title: 'Feedback chi tiết sau mỗi buổi', desc: 'Nhận đánh giá điểm mạnh, điểm yếu và gợi ý cải thiện ngay sau khi kết thúc phỏng vấn.', bg_color: 'rgba(131,24,67,0.35)' },
