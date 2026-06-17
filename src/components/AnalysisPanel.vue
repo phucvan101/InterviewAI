@@ -571,6 +571,16 @@ const activeDetailTab = ref('tongquan')
 const analysisProgress = ref(0)
 const expandedSkill = ref(null) // { type: 'matched'|'related'|'missing', index: number }
 
+const canStartAnalysis = computed(() => {
+  return (
+    props.canUseInterviewFeatures &&
+    props.cvReady &&
+    props.jdReady &&
+    !!props.cvFilePath &&
+    !!props.jdFilePath
+  )
+})
+
 function toggleSkillDetail(type, index) {
   if (expandedSkill.value?.type === type && expandedSkill.value?.index === index) {
     expandedSkill.value = null
@@ -870,6 +880,12 @@ async function startAnalysis() {
         matchedCount: response.data.data?.skills_detail?.matched?.length,
         relatedCount: response.data.data?.skills_detail?.related?.length,
         missingCount: response.data.data?.skills_detail?.missing?.length,
+      })
+      emit('analysis-complete', response.data)
+      console.log('[AnalysisPanel] emitted analysis-complete', {
+        sessionId: response.data?.session_id,
+        hasData: !!response.data?.data,
+        overallScore: response.data?.data?.overall_score
       })
     } else {
       throw new Error(response.data.message || 'Phân tích thất bại')

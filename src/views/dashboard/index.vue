@@ -1389,7 +1389,7 @@ watch(sessionId, async (newSessionId) => {
     await getInforInterview(newSessionId)  // await để đảm bảo xong mới check
 
     // Kiểm tra null-safe trước khi truy cập
-    const overallScore = analysisData.value?.analysis.data.overall_score
+    const overallScore = analysisData.value?.data?.overall_score
 
     console.log('overall_score:', overallScore)
     console.log('analysisData:', analysisData.value)
