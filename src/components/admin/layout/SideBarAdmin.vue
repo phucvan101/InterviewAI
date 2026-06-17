@@ -17,9 +17,9 @@
 
         <!-- Nav -->
         <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-            <button v-for="item in navItems" :key="item.label"
+            <button v-for="item in visibleNavItems" :key="item.label"
                 class="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150"
-                :style="route.path === item.route
+                :style="isActive(item)
                     ? 'background: #4F46E5; border: 1px solid rgba(79, 70, 229, 0.2); color:#fff;'
                     : 'color:rgba(255,255,255,0.5);'" @click="router.push(item.route)">
                 <div class="w-[18px] h-[18px]" :style="{
@@ -34,12 +34,16 @@
 
         <!-- User -->
         <div class="flex items-center gap-3 px-4 py-4 border-t" style="border-color:rgba(255,255,255,0.06);">
-            <img :src="`https://i.pravatar.cc/40?u=${auth.user?.email || 'default'}`"
-                class="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+            <img v-if="auth.user.avatar_url" :src="auth.user.avatar_url" :alt="auth.userName"
+                class="h-10 w-10 rounded-full border border-white/10 object-cover" />
+            <div v-else
+                class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#4f46e5]/30 to-[#4338ca]/30 text-xs font-black text-[#a5b4fc]">
+                {{ getInitials(auth.userName) }}
+            </div>
             <div class="flex-1 min-w-0">
                 <div class="text-[12.5px] font-semibold text-white truncate">{{ auth.userName }}</div>
-                <div class="text-[10.5px] truncate" style="color:rgba(255,255,255,0.38);">{{ auth.user?.email || 'Khách'
-                    }}</div>
+                <div class="text-[10.5px] truncate" style="color:rgba(255,255,255,0.38);">{{ auth.user?.email }}
+                </div>
             </div>
             <button @click="handleLogout"
                 class="w-7 h-7 flex items-center justify-center rounded-lg transition-colors hover:bg-white/10"
@@ -62,7 +66,6 @@ import icon_cdht from '@/assets/icon/admin/dashboard/cdht.svg'
 import icon_chq from '@/assets/icon/admin/dashboard/chq.svg'
 import icon_ppv from '@/assets/icon/admin/dashboard/ppv.svg'
 import icon_db from '@/assets/icon/admin/dashboard/db.svg'
-import { ro } from 'element-plus/es/locale/index.mjs'
 
 const router = useRouter()
 const route = useRoute()
@@ -73,27 +76,32 @@ const navItems = ref([
         label: 'Bảng điều khiển', active: true,
         icon: icon_db,
         route: '/admin/dashboard',
+        permissions: [],
     },
     {
         label: 'Quản lý người dùng', active: false,
         icon: icon_qlnd,
         route: '/admin/user-management',
+        permissions: ['users.read'],
     },
     {
-        label: 'Phòng phỏng vấn', active: false,
+        label: 'Quản lý phiên phỏng vấn', active: false,
         icon: icon_ppv,
-        route: '/admin/interview-rooms',
+        route: '/admin/sessions',
+        permissions: ['sessions.read'],
     },
     {
         label: 'Cấu hình quyền', active: false,
         icon: icon_chq,
         route: '/admin/role-configuration',
+        permissions: ['roles.read'],
     },
-    {
-        label: 'Cài đặt hệ thống', active: false,
-        icon: icon_cdht,
-        route: '/admin/system-settings',
-    },
+    // {
+    //     label: 'Cài đặt hệ thống', active: false,
+    //     icon: icon_cdht,
+    //     route: '/admin/system-settings',
+    //     permissions: [],
+    // },
 ])
 
 function setActiveNav(selected) {
@@ -112,9 +120,31 @@ const recentSessions = [
 
 // Auth store
 const auth = useAuthStore();
-console.log('user', auth.user);
+const visibleNavItems = computed(() => {
+    return navItems.value.filter((item) => auth.hasAnyPermission(item.permissions))
+})
+
+console.log('auth', auth.user, auth.permissionsa)
+
 const handleLogout = () => {
     auth.logout()
     router.push('/')
+}
+
+const isActive = (item) => {
+    return (
+        route.path === item.route ||
+        route.path.startsWith(item.route + '/')
+    )
+}
+
+function getInitials(name = '') {
+    return String(name)
+        .trim()
+        .split(/\s+/)
+        .map((word) => word[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase() || 'U'
 }
 </script>

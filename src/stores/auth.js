@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import axios from 'axios'
 
 export const useAuthStore = defineStore('auth', () => {
   const ACCESS_TOKEN_KEY = 'access_token'
@@ -19,19 +20,6 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     return `${API_BASE_URL}${normalizedPath}`
-  }
-
-  function parseResponseBody(response) {
-    return response
-      .text()
-      .then((text) => {
-        if (!text) return null
-        try {
-          return JSON.parse(text)
-        } catch {
-          return { message: text }
-        }
-      })
   }
 
   function getErrorMessage(errorData, fallback = 'Có lỗi xảy ra, vui lòng thử lại.') {
@@ -65,6 +53,63 @@ export const useAuthStore = defineStore('auth', () => {
         source.profile ??
         null,
     }
+  }
+
+  function normalizePermissionCode(permission) {
+    if (!permission) return ''
+    if (typeof permission === 'string') return permission
+
+    return (
+      permission.code ??
+      permission.name ??
+      permission.permission_code ??
+      permission.permissionCode ??
+      ''
+    )
+  }
+
+  function collectPermissionCodes(source, result = new Set()) {
+    if (!source) return result
+
+    if (Array.isArray(source)) {
+      source.forEach((item) => collectPermissionCodes(item, result))
+      return result
+    }
+
+    if (typeof source === 'string') {
+      result.add(source)
+      return result
+    }
+
+    const directCode = normalizePermissionCode(source)
+    if (directCode) result.add(directCode)
+
+    collectPermissionCodes(source.permissions, result)
+    collectPermissionCodes(source.permission_codes, result)
+    collectPermissionCodes(source.permissionCodes, result)
+    collectPermissionCodes(source.roles, result)
+    collectPermissionCodes(source.role, result)
+
+    return result
+  }
+
+  function isLockedAccount(userData) {
+    if (!userData) return false
+
+    const rawStatus = String(
+      userData.status ??
+      userData.account_status ??
+      userData.accountStatus ??
+      ''
+    ).toLowerCase()
+
+    return (
+      userData.is_deleted === true ||
+      userData.is_deleted === 1 ||
+      userData.is_active === false ||
+      userData.is_active === 0 ||
+      ['inactive', 'deactivated', 'locked', 'suspended', 'disabled', 'blocked'].includes(rawStatus)
+    )
   }
 
   function extractTokensFromParams(params) {
@@ -125,6 +170,32 @@ export const useAuthStore = defineStore('auth', () => {
     const features = `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
 
     return window.open(url, name, features)
+  }
+
+  function getStoredAccessToken() {
+    return localStorage.getItem(ACCESS_TOKEN_KEY) || localStorage.getItem('token') || null
+  }
+
+  function getStoredRefreshToken() {
+    return localStorage.getItem(REFRESH_TOKEN_KEY) || null
+  }
+
+  function syncTokensFromStorage() {
+    const storedAccessToken = getStoredAccessToken()
+    const storedRefreshToken = getStoredRefreshToken()
+
+    if (storedAccessToken && storedAccessToken !== token.value) {
+      token.value = storedAccessToken
+    }
+
+    if (storedRefreshToken && storedRefreshToken !== refreshToken.value) {
+      refreshToken.value = storedRefreshToken
+    }
+
+    return {
+      accessToken: token.value,
+      refreshToken: refreshToken.value,
+    }
   }
 
   function waitForPopupResult(popup, options = {}) {
@@ -189,12 +260,14 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   function saveTokens(nextAccessToken, nextRefreshToken) {
+    // Set ref trước
     token.value = nextAccessToken || null
     refreshToken.value = nextRefreshToken || null
 
+    // Sau đó sync localStorage
     if (token.value) {
       localStorage.setItem(ACCESS_TOKEN_KEY, token.value)
-      localStorage.setItem('token', token.value) // Backward compatibility
+      localStorage.setItem('token', token.value)
     } else {
       localStorage.removeItem(ACCESS_TOKEN_KEY)
       localStorage.removeItem('token')
@@ -205,6 +278,9 @@ export const useAuthStore = defineStore('auth', () => {
     } else {
       localStorage.removeItem(REFRESH_TOKEN_KEY)
     }
+
+    // THÊM: verify ref đã update
+    console.log('saveTokens - token.value after save:', token.value?.substring(0, 30))
   }
 
   async function request(path, options = {}) {
@@ -220,35 +296,46 @@ export const useAuthStore = defineStore('auth', () => {
       ...headers,
     }
 
-    if (body !== undefined) {
+    const isFormData = typeof FormData !== 'undefined' && body instanceof FormData
+
+    if (body !== undefined && !isFormData) {
       requestHeaders['Content-Type'] = requestHeaders['Content-Type'] || 'application/json'
     }
 
-    if (auth && token.value) {
-      requestHeaders.Authorization = `Bearer ${token.value}`
+    const currentTokens = auth
+      ? syncTokensFromStorage()
+      : { accessToken: token.value, refreshToken: refreshToken.value }
+
+    if (auth && currentTokens.accessToken) {
+      requestHeaders.Authorization = `Bearer ${currentTokens.accessToken}`
     }
 
-    const response = await fetch(buildUrl(path), {
-      method,
-      headers: requestHeaders,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    })
+    console.log('→ Request:', method, buildUrl(path))
+    console.log('→ Headers being sent:', requestHeaders)
 
-    if (response.status === 401 && auth && retryOn401 && refreshToken.value) {
-      await refreshAccessToken()
-      return request(path, { ...options, retryOn401: false })
-    }
+    try {
+      const response = await axios({
+        url: buildUrl(path),
+        method,
+        headers: requestHeaders,
+        data: body,
+      })
 
-    const data = await parseResponseBody(response)
+      return response.data ?? null
+    } catch (err) {
+      const status = err.response?.status
+      const data = err.response?.data
 
-    if (!response.ok) {
-      const error = new Error(getErrorMessage(data))
-      error.status = response.status
+      if (status === 401 && auth && retryOn401 && currentTokens.refreshToken) {
+        await refreshAccessToken()
+        return request(path, { ...options, retryOn401: false })
+      }
+
+      const error = new Error(getErrorMessage(data, err.message))
+      error.status = status
       error.data = data
       throw error
     }
-
-    return data
   }
 
   const user = ref(null)
@@ -258,6 +345,42 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isLoggedIn = computed(() => !!token.value)
   const userName = computed(() => user.value?.full_name || user.value?.name || 'Guest')
+  const isAccountLocked = computed(() => isLockedAccount(user.value))
+  const canUseInterviewFeatures = computed(() => !isAccountLocked.value)
+  const userPermissions = computed(() => {
+    return Array.from(collectPermissionCodes(user.value))
+  })
+
+  const isSuperUser = computed(() => {
+    return user.value?.is_superuser === true || user.value?.is_superuser === 1
+  })
+
+  function hasPermission(permissionCode) {
+    if (!permissionCode) return true
+    if (isSuperUser.value) return true
+
+    return userPermissions.value.includes(permissionCode)
+  }
+
+  function hasAnyPermission(permissionCodes = []) {
+    const codes = Array.isArray(permissionCodes) ? permissionCodes : [permissionCodes]
+    const filteredCodes = codes.filter(Boolean)
+
+    if (!filteredCodes.length) return true
+    if (isSuperUser.value) return true
+
+    return filteredCodes.some((permissionCode) => hasPermission(permissionCode))
+  }
+
+  function hasAllPermissions(permissionCodes = []) {
+    const codes = Array.isArray(permissionCodes) ? permissionCodes : [permissionCodes]
+    const filteredCodes = codes.filter(Boolean)
+
+    if (!filteredCodes.length) return true
+    if (isSuperUser.value) return true
+
+    return filteredCodes.every((permissionCode) => hasPermission(permissionCode))
+  }
 
   async function login(credentials) {
     loading.value = true
@@ -351,13 +474,18 @@ export const useAuthStore = defineStore('auth', () => {
 
     const response = await request('/api/v1/users/refresh', {
       method: 'POST',
-      body: {
-        refresh_token: refreshToken.value,
-      },
+      body: { refresh_token: refreshToken.value },
       retryOn401: false,
     })
 
+    // THÊM LOG
+    console.log('Refresh response:', response)
+
     const normalized = normalizeAuthData(response)
+
+    // THÊM LOG
+    console.log('Normalized after refresh:', normalized)
+
     if (!normalized.accessToken) {
       throw new Error('Làm mới token thất bại do thiếu access token.')
     }
@@ -401,8 +529,110 @@ export const useAuthStore = defineStore('auth', () => {
     })
   }
 
+  async function forgotPassword(email) {
+    return request('/api/v1/users/forgot-password', {
+      method: 'POST',
+      body: { email }
+    })
+  }
+
   async function authorizedRequest(path, options = {}) {
     return request(path, { ...options, auth: true })
+  }
+
+  async function authorizedBlobRequest(path, options = {}) {
+    const {
+      method = 'GET',
+      body,
+      retryOn401 = true,
+      headers = {},
+    } = options
+
+    const currentTokens = syncTokensFromStorage()
+    const requestHeaders = { ...headers }
+
+    if (currentTokens.accessToken) {
+      requestHeaders.Authorization = `Bearer ${currentTokens.accessToken}`
+    }
+
+    try {
+      const response = await axios({
+        url: buildUrl(path),
+        method,
+        headers: requestHeaders,
+        data: body,
+        responseType: 'blob',
+      })
+
+      return response.data
+    } catch (err) {
+      const status = err.response?.status
+
+      if (status === 401 && retryOn401 && currentTokens.refreshToken) {
+        await refreshAccessToken()
+        return authorizedBlobRequest(path, { ...options, retryOn401: false })
+      }
+
+      const error = new Error(err.message || 'Không thể tải file.')
+      error.status = status
+      error.data = err.response?.data
+      throw error
+    }
+  }
+
+  async function authorizedStreamRequest(path, options = {}) {
+    const {
+      method = 'GET',
+      body,
+      retryOn401 = true,
+      headers = {},
+      signal,
+    } = options
+
+    const currentTokens = syncTokensFromStorage()
+    const requestHeaders = { ...headers }
+    const isFormData = typeof FormData !== 'undefined' && body instanceof FormData
+    let requestBody = body
+
+    if (body !== undefined && !isFormData && !(body instanceof Blob)) {
+      requestHeaders['Content-Type'] = requestHeaders['Content-Type'] || 'application/json'
+      requestBody = typeof body === 'string' ? body : JSON.stringify(body)
+    }
+
+    if (currentTokens.accessToken) {
+      requestHeaders.Authorization = `Bearer ${currentTokens.accessToken}`
+    }
+
+    const response = await fetch(buildUrl(path), {
+      method,
+      headers: requestHeaders,
+      body: requestBody,
+      signal,
+    })
+
+    if (response.status === 401 && retryOn401 && currentTokens.refreshToken) {
+      await refreshAccessToken()
+      return authorizedStreamRequest(path, { ...options, retryOn401: false })
+    }
+
+    if (!response.ok) {
+      let data = null
+      try {
+        const contentType = response.headers.get('content-type') || ''
+        data = contentType.includes('application/json')
+          ? await response.json()
+          : await response.text()
+      } catch (_) {
+        data = null
+      }
+
+      const error = new Error(getErrorMessage(data, 'Không thể tải dữ liệu.'))
+      error.status = response.status
+      error.data = data
+      throw error
+    }
+
+    return response
   }
 
   async function logout() {
@@ -416,6 +646,13 @@ export const useAuthStore = defineStore('auth', () => {
     refreshToken,
     loading,
     isLoggedIn, userName,
+    isAccountLocked,
+    canUseInterviewFeatures,
+    userPermissions,
+    isSuperUser,
+    hasPermission,
+    hasAnyPermission,
+    hasAllPermissions,
     login,
     register,
     loginWithGoogle,
@@ -423,7 +660,10 @@ export const useAuthStore = defineStore('auth', () => {
     fetchProfile,
     updateProfile,
     changePassword,
+    forgotPassword,
     authorizedRequest,
+    authorizedBlobRequest,
+    authorizedStreamRequest,
     logout,
   }
 })

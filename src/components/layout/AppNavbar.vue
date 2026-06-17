@@ -13,22 +13,26 @@
 
                 <!-- Desktop Nav -->
                 <div class="hidden items-center gap-1 md:flex">
-                    <RouterLink v-for="link in navLinks" :key="link.to" :to="link.to" class="nav-link">
+                    <RouterLink v-for="link in navLinks" :key="link.hash" :to="link" class="nav-link">
                         {{ link.label }}
                     </RouterLink>
                 </div>
 
                 <!-- Right -->
                 <div class="flex items-center gap-3">
-                    <RouterLink to="/login" class="nav-link hidden md:block">
-                        Đăng nhập
-                    </RouterLink>
+                    <div class="text-end" style="width: 190px;">
+                        <RouterLink to="/login"
+                            class="hidden md:inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white transition-all duration-200"
+                            style="background: var(--primary);">
+                            Đăng nhập
+                        </RouterLink>
+                    </div>
 
-                    <RouterLink to="/"
+                    <!-- <RouterLink to="/"
                         class="hidden md:inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white transition-all duration-200"
                         style="background: var(--primary);">
                         Bắt đầu ngay
-                    </RouterLink>
+                    </RouterLink> -->
 
                     <button class="md:hidden p-2 rounded-lg" style="color: var(--text-muted);"
                         @click="mobileMenuOpen = !mobileMenuOpen">
@@ -44,7 +48,7 @@
             leave-from-class="opacity-100" leave-to-class="opacity-0">
             <div v-if="mobileMenuOpen" class="border-t px-4 py-3 md:hidden"
                 style="background: var(--bg-alt); border-color: var(--border);">
-                <RouterLink v-for="link in navLinks" :key="link.to" :to="link.to"
+                <RouterLink v-for="link in navLinks" :key="link.hash" :to="link"
                     class="block py-2 px-3 rounded-lg text-sm nav-link" @click="mobileMenuOpen = false">
                     {{ link.label }}
                 </RouterLink>
@@ -60,9 +64,9 @@ import { RouterLink } from "vue-router"
 const mobileMenuOpen = ref(false)
 
 const navLinks = [
-    { to: "/", label: "Cách hoạt động" },
-    { to: "/webrtc", label: "Tính năng" },
-    { to: "/speech", label: "Bảng giá" },
-    { to: "/about", label: "Giới thiệu" },
+    { name: "home", hash: "#steps", label: "Quy trình" },
+    { name: "home", hash: "#demo", label: "Demo" },
+    { name: "home", hash: "#features", label: "Tính năng" },
+    { name: "home", hash: "#testimonials", label: "Đánh giá" },
 ]
 </script>

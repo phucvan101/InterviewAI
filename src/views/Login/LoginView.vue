@@ -71,9 +71,12 @@
 
                 <!--Login-->
                 <!-- Header -->
-                <div v-if="!isRegisterMode">
+                <div v-if="isForgotPasswordMode">
+                    <ForgotPasswordForm @back-to-login="isForgotPasswordMode = false" />
+                </div>
+                <div v-else-if="!isRegisterMode">
                     <LoginForm @submit="handleLogin" @switch="switchToRegister" @oauth="handleOAuth"
-                        :isLoading="isLoading" />
+                        @forgot="isForgotPasswordMode = true" :isLoading="isLoading" />
                 </div>
 
                 <div v-else>
@@ -86,12 +89,13 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import BG_IMAGE from '@/assets/image/avatarAI.png'
 import LoginForm from './LoginForm.vue'
 import RegisterForm from './RegisterForm.vue'
+import ForgotPasswordForm from './ForgotPasswordForm.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -99,13 +103,14 @@ const authStore = useAuthStore()
 
 const bgImage = ref(BG_IMAGE)
 const isRegisterMode = ref(false)
+const isForgotPasswordMode = ref(false)
 const isLoading = ref(false)
 const errorMessage = ref('')
 
 const stats = [
     { num: '50K+', label: 'Ứng viên' },
     { num: '98%', label: 'Hài lòng' },
-    { num: 'GPT-4o', label: 'Công nghệ' },
+    { num: 'GPT-4o-mini', label: 'Công nghệ' },
 ]
 
 async function handleLogin(payload) {
@@ -114,8 +119,7 @@ async function handleLogin(payload) {
     try {
         await authStore.login(payload)
         await authStore.fetchProfile()
-        console.log('user dd', authStore.user)
-        if (authStore.user.is_superuser) {
+        if (authStore.user.can_access_admin) {
             await router.push('/admin/dashboard')
         } else {
             await router.push('/dashboard')
@@ -172,12 +176,15 @@ async function handleOAuth(provider) {
 function switchToRegister() {
     errorMessage.value = ''
     isRegisterMode.value = true
+    isForgotPasswordMode.value = false
 }
 
 function switchToLogin() {
     errorMessage.value = ''
     isRegisterMode.value = false
+    isForgotPasswordMode.value = false
 }
+
 </script>
 
 <style>

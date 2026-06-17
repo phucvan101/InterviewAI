@@ -26,16 +26,19 @@
         <p class="text-[13px] mb-6" style="color:rgba(255,255,255,0.5);">
           Nhấn nút dưới để xem mức độ phù hợp của CV với công việc
         </p>
-        <button class="px-6 py-2.5 rounded-lg font-semibold transition-all" :style="cvReady && jdReady ? {
+        <button class="px-6 py-2.5 rounded-lg font-semibold transition-all" :style="canStartAnalysis ? {
           background: 'linear-gradient(135deg,#fbbf24,#f59e0b)',
           color: '#1a1a1a'
         } : {
           background: 'rgba(255,255,255,0.08)',
           color: 'rgba(255,255,255,0.4)'
-        }" :disabled="!cvReady || !jdReady" @click="startAnalysis">
-          {{ cvReady && jdReady ? 'Bắt đầu phân tích' : 'Tải CV và JD lên' }}
+        }" :disabled="!canStartAnalysis" @click="startAnalysis">
+          {{ canStartAnalysis ? 'Bắt đầu phân tích' : props.canUseInterviewFeatures ? 'Tải CV và JD lên' : 'Tài khoản bị khóa' }}
         </button>
-        <p v-if="!cvReady || !jdReady" class="text-[11px] mt-3" style="color:#f87171;">
+        <p v-if="!props.canUseInterviewFeatures" class="text-[11px] mt-3" style="color:#fbbf24;">
+          Tài khoản bị khóa không thể tạo phân tích cho phiên phỏng vấn mới.
+        </p>
+        <p v-else-if="!cvReady || !jdReady" class="text-[11px] mt-3" style="color:#f87171;">
           {{
             !cvReady && !jdReady ? 'Hãy tải file CV và JD lên' : !cvReady ? 'Hãy tải file CV lên' : 'Hãy tải file JD lên'
           }}
@@ -520,7 +523,7 @@
 import { ref, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import axios from 'axios'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElNotification } from 'element-plus'
 
 const authStore = useAuthStore()
 
@@ -545,8 +548,18 @@ const props = defineProps({
   companyFilePath: {
     type: String,
     default: null
+  },
+  session_id: {
+    type: Number,
+    default: null
+  },
+  canUseInterviewFeatures: {
+    type: Boolean,
+    default: true
   }
 })
+
+const emit = defineEmits(['analysis-complete', 'analysis-reset'])
 
 // State
 const isAnalyzing = ref(false)
@@ -800,6 +813,11 @@ function getScoreLabel(score) {
 
 // Methods
 async function startAnalysis() {
+  if (!props.canUseInterviewFeatures) {
+    ElMessage.warning('Tài khoản của bạn đang bị khóa, không thể tạo phiên phỏng vấn mới.')
+    return
+  }
+
   if (!props.cvReady || !props.jdReady || !props.cvFilePath || !props.jdFilePath) {
     ElMessage.error('Hãy tải file CV và JD lên')
     return

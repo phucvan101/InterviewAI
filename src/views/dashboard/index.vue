@@ -10,7 +10,7 @@
                     <p class="text-[12px] mt-0.5" style="color:rgba(255,255,255,0.38);">Thiết lập môi trường cho buổi mô
                         phỏng</p>
                 </div>
-                <button class="relative w-9 h-9 flex items-center justify-center rounded-xl border transition-colors"
+                <!-- <button class="relative w-9 h-9 flex items-center justify-center rounded-xl border transition-colors"
                     style="background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.08); color:rgba(255,255,255,0.5);"
                     @mouseenter="$event.currentTarget.style.background = 'rgba(255,255,255,0.08)'"
                     @mouseleave="$event.currentTarget.style.background = 'rgba(255,255,255,0.04)'">
@@ -20,11 +20,16 @@
                             d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
                     </svg>
                     <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 border border-[#0f1225]" />
-                </button>
+                </button> -->
             </header>
 
             <!-- Scrollable body -->
             <div class="flex-1 overflow-y-auto px-8 py-6 space-y-6">
+                <div v-if="isInterviewFeatureLocked" class="rounded-xl border px-4 py-3 text-sm"
+                    style="background:rgba(245,158,11,0.1); border-color:rgba(245,158,11,0.28); color:#fcd34d;">
+                    Tài khoản của bạn đang bị khóa. Bạn vẫn có thể xem lịch sử phỏng vấn và báo cáo, nhưng không thể
+                    tải tài liệu hoặc tạo phiên phỏng vấn mới.
+                </div>
 
                 <!-- ── Step Progress ── -->
                 <div class="flex items-center gap-0">
@@ -73,11 +78,12 @@
                         <!-- ═══ Card CV: có logic upload ═══ -->
                         <div v-if="doc.id === 'cv'"
                             class="relative rounded-2xl border p-5 cursor-pointer transition-all duration-200"
+                            :class="{ 'opacity-60 cursor-not-allowed': isInterviewFeatureLocked }"
                             :style="getDocStyle(doc)" @click="onCvCardClick" @dragover.prevent @drop="onCvDrop">
 
                             <!-- Hidden file input -->
                             <input ref="cvFileInputRef" type="file" accept="application/pdf" class="hidden"
-                                @change="onCvFileChange" />
+                                :disabled="isInterviewFeatureLocked" @change="onCvFileChange" />
 
                             <!-- Step badge -->
                             <div class="absolute top-4 left-4 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold"
@@ -169,6 +175,7 @@
                         <!-- ═══ Card JD: có logic upload ═══ -->
                         <div v-else-if="doc.id === 'job-description'"
                             class="relative rounded-2xl border p-5 cursor-pointer transition-all duration-200"
+                            :class="{ 'opacity-60 cursor-not-allowed': isInterviewFeatureLocked }"
                             :style="getJdDocStyle()" @click="jdInputMode === 'file' ? onJdCardClick() : null"
                             @dragover.prevent @drop="jdInputMode === 'file' ? onJdDrop($event) : null">
 
@@ -208,14 +215,14 @@
                                         :style="jdInputMode === 'file'
                                             ? 'background:rgba(59,130,246,0.2); border-color:rgba(59,130,246,0.35); color:#93c5fd;'
                                             : 'background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.12); color:rgba(255,255,255,0.65);'"
-                                        @click="onJdFileChange">
+                                        :disabled="isInterviewFeatureLocked" @click.stop="jdInputMode = 'file'">
                                         Upload file
                                     </button>
                                     <button class="px-2.5 py-1 rounded text-[11px] border"
                                         :style="jdInputMode === 'text'
                                             ? 'background:rgba(59,130,246,0.2); border-color:rgba(59,130,246,0.35); color:#93c5fd;'
                                             : 'background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.12); color:rgba(255,255,255,0.65);'"
-                                        @click.stop="jdInputMode = 'text'">
+                                        :disabled="isInterviewFeatureLocked" @click.stop="jdInputMode = 'text'">
                                         Dán text
                                     </button>
                                 </div>
@@ -230,7 +237,7 @@
                                     <button
                                         class="w-full px-3 py-2 rounded-lg text-[12px] font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                                         style="background:linear-gradient(90deg,#3b82f6,#2563eb); color:white;"
-                                        :disabled="!jobDescriptionText.trim() || jobDescriptionUploadState === 'uploading'"
+                                        :disabled="isInterviewFeatureLocked || !jobDescriptionText.trim() || jobDescriptionUploadState === 'uploading'"
                                         @click.stop="handleJdTextUploadRequest">
                                         Xong
                                     </button>
@@ -301,6 +308,7 @@
                         <!-- ═══ Card Company Research: có logic upload ═══ -->
                         <div v-else-if="doc.id === 'company-research'"
                             class="relative rounded-2xl border p-5 cursor-pointer transition-all duration-200"
+                            :class="{ 'opacity-60 cursor-not-allowed': isInterviewFeatureLocked }"
                             :style="getCompanyDocStyle()"
                             @click="companyInputMode === 'file' ? onCompanyCardClick() : null" @dragover.prevent
                             @drop="companyInputMode === 'file' ? onCompanyDrop($event) : null">
@@ -308,7 +316,7 @@
                             <!-- Hidden file input -->
                             <input ref="companyFileInputRef" type="file"
                                 accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
-                                class="hidden" @change="onCompanyFileChange" />
+                                class="hidden" :disabled="isInterviewFeatureLocked" @change="onCompanyFileChange" />
 
                             <!-- Step badge -->
                             <div class="absolute top-4 left-4 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold"
@@ -341,14 +349,14 @@
                                         :style="companyInputMode === 'file'
                                             ? 'background:rgba(168,85,247,0.2); border-color:rgba(168,85,247,0.35); color:#d8b4fe;'
                                             : 'background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.12); color:rgba(255,255,255,0.65);'"
-                                        @click.stop="companyInputMode = 'file'">
+                                        :disabled="isInterviewFeatureLocked" @click.stop="companyInputMode = 'file'">
                                         Upload file
                                     </button>
                                     <button class="px-2.5 py-1 rounded text-[11px] border"
                                         :style="companyInputMode === 'text'
                                             ? 'background:rgba(168,85,247,0.2); border-color:rgba(168,85,247,0.35); color:#d8b4fe;'
                                             : 'background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.12); color:rgba(255,255,255,0.65);'"
-                                        @click.stop="companyInputMode = 'text'">
+                                        :disabled="isInterviewFeatureLocked" @click.stop="companyInputMode = 'text'">
                                         Dán text
                                     </button>
                                 </div>
@@ -363,7 +371,7 @@
                                     <button
                                         class="w-full px-3 py-2 rounded-lg text-[12px] font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                                         style="background:linear-gradient(90deg,#a855f7,#9333ea); color:white;"
-                                        :disabled="!companyResearchText.trim() || companyUploadState === 'uploading'"
+                                        :disabled="isInterviewFeatureLocked || !companyResearchText.trim() || companyUploadState === 'uploading'"
                                         @click.stop="handleCompanyTextUploadRequest">
                                         Xong
                                     </button>
@@ -495,16 +503,19 @@
                     <!-- Fit analysis -->
                     <div ref="analysisPanelRef">
                         <AnalysisPanel :cvReady="cvReady" :jdReady="jdReady" :cvFilePath="cvPath" :jdFilePath="jdPath"
-                            :companyFilePath="companyPath" />
+                            :companyFilePath="companyPath"
+                            :can-use-interview-features="authStore.canUseInterviewFeatures"
+                            @analysis-complete="handleAnalysisComplete" @analysis-reset="analysisReady = false" />
                     </div>
 
                     <!-- Action button -->
-                    <div class="flex items-center justify-end pt-2">
-                        <button
+                    <div class="flex justify-end pt-2">
+                        <button :disabled="isInterviewFeatureLocked || !analysisReady || isStartingConversation"
+                            @click="startConversation"
                             class="flex items-center gap-2.5 px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-200 btn-common"
                             @mouseenter="$event.currentTarget.style.transform = 'translateY(-1px)'; $event.currentTarget.style.boxShadow = '0 8px 24px rgba(79,70,229,0.55)'"
                             @mouseleave="$event.currentTarget.style.transform = ''; $event.currentTarget.style.boxShadow = '0 4px 18px rgba(79,70,229,0.4)'">
-                            Vào phòng phỏng vấn
+                            {{ isStartingConversation ? 'Đang tạo phiên...' : 'Vào phòng phỏng vấn' }}
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                                 stroke-width="2.2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -576,7 +587,7 @@
                     <!-- Hidden file input -->
                     <input ref="jdFileInputRef" type="file"
                         accept=".docx,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                        class="hidden" @change="onJdFileChange" />
+                        class="hidden" :disabled="isInterviewFeatureLocked" @change="onJdFileChange" />
                 </div>
 
             </div>
@@ -606,12 +617,23 @@ import LayoutInterview from '../layouts/LayoutInterview.vue'
 import AnalysisPanel from '@/components/AnalysisPanel.vue'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
+import { useRouter } from 'vue-router'
 
 const showJobDescriptionDialog = ref(false);
+const analysisReady = ref(false)
+const sessionId = ref(null)
+const cv_raw_text = ref('')
+const jd_raw_text = ref('')
+const isStartingConversation = ref(false)
+const analysisData = ref({})
+
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '')
 const authStore = useAuthStore()
+const router = useRouter()
+const isInterviewFeatureLocked = computed(() => !authStore.canUseInterviewFeatures)
+const lockedFeatureMessage = 'Tài khoản của bạn đang bị khóa. Bạn vẫn có thể xem lịch sử phỏng vấn và báo cáo, nhưng không thể tải tài liệu hoặc tạo phiên phỏng vấn mới.'
 
 function buildApiUrl(path) {
     const normalizedPath = path.startsWith('/') ? path : `/${path}`
@@ -627,34 +649,28 @@ function buildApiUrl(path) {
     return `${API_BASE_URL}${normalizedPath}`
 }
 
-// ── Navigation ───────────────────────────────────────────────────────────────
-const navItems = ref([
-    {
-        label: 'Bảng điều khiển', active: true,
-        icon: `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>`,
-    },
-    {
-        label: 'Kho kiến thức', active: false,
-        icon: `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"/></svg>`,
-    },
-    {
-        label: 'Phòng phỏng vấn', active: false,
-        icon: `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>`,
-    },
-    {
-        label: 'Báo cáo', active: false,
-        icon: `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/></svg>`,
-    },
-])
 
-function setActiveNav(selected) {
-    navItems.value.forEach(i => i.active = i === selected)
+function handleAnalysisComplete(data) {
+
+    sessionId.value = data.session_id
+    analysisData.value = data
+
+    console.log('sessionId:', sessionId.value)
 }
 
-const recentSessions = [
-    { title: 'Vị trí PM Cấp cao', color: '#4ade80' },
-    { title: 'Trưởng nhóm UX tại Google', color: '#fbbf24' },
-]
+function notifyLockedFeature() {
+    ElNotification.warning({
+        title: 'Tài khoản bị khóa',
+        message: lockedFeatureMessage,
+        duration: 4000,
+    })
+}
+
+function ensureCanUseInterviewFeatures() {
+    if (!isInterviewFeatureLocked.value) return true
+    notifyLockedFeature()
+    return false
+}
 
 // ── Steps ────────────────────────────────────────────────────────────────────
 const activeStep = ref(0) // 0-indexed
@@ -777,6 +793,8 @@ const cvReady = computed(() => cvUploadState.value === 'success')
 const jdReady = computed(() => jobDescriptionUploadState.value === 'success')
 
 function onCvCardClick() {
+    if (!ensureCanUseInterviewFeatures()) return
+
     const el = cvFileInputRef.value
     // kiểm tra chắc chắn là DOM element có method click
     if ((cvUploadState.value === 'idle' || cvUploadState.value === 'error') && el && typeof el.click === 'function') {
@@ -795,6 +813,7 @@ function onCvCardClick() {
 }
 
 async function handleCvUpload(file) {
+    if (!ensureCanUseInterviewFeatures()) return
     if (!file) return
     if (file.type !== 'application/pdf') {
         cvUploadState.value = 'error'
@@ -853,12 +872,14 @@ async function handleCvUpload(file) {
 }
 
 function onCvFileChange(e) {
+    if (!ensureCanUseInterviewFeatures()) return
     const file = e.target.files?.[0]
     if (file) handleCvUpload(file)
 }
 
 function onCvDrop(e) {
     e.preventDefault()
+    if (!ensureCanUseInterviewFeatures()) return
     const file = e.dataTransfer.files?.[0]
     if (file) handleCvUpload(file)
 }
@@ -911,6 +932,56 @@ function getDocStyle(doc) {
 
 function onDocClick(doc) {
     // Now company research is handled by the card upload, no modal needed
+}
+
+async function getInforInterview(id_session) {
+    try {
+        const response = await authStore.authorizedRequest(`/api/v1/analysis/${id_session}`, {
+            method: 'GET',
+        })
+        cv_raw_text.value = response.cv_raw_text
+        jd_raw_text.value = response.jd_raw_text
+
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+async function startConversation() {
+    if (!ensureCanUseInterviewFeatures()) return
+
+    if (!cvPath.value || !jdPath.value) {
+        ElNotification.warning({
+            title: 'Thiếu tài liệu',
+            message: 'Vui lòng đảm bảo bạn đã tải lên cả CV và Mô tả công việc để bắt đầu phiên phỏng vấn.',
+            duration: 3000,
+        })
+        return
+    }
+
+    isStartingConversation.value = true
+
+    try {
+        const response = await authStore.authorizedRequest('/api/v1/conversations/', {
+            method: 'POST',
+            body: {
+                analysis_session_id: sessionId.value,
+                job_description: jd_raw_text.value,
+                cv_profile: cv_raw_text.value,
+            },
+        })
+
+        const conversationSessionId = response.session_id
+        if (!conversationSessionId) {
+            throw new Error('Backend không trả về session_id')
+        }
+
+        router.push(`/interview/${conversationSessionId}`)
+    } catch (err) {
+        ElMessage.error(err.message || 'Không thể tạo phiên phỏng vấn')
+    } finally {
+        isStartingConversation.value = false
+    }
 }
 
 async function handleJdTextSubmit() {
@@ -1001,6 +1072,8 @@ function getCompanyDocStyle() {
 }
 
 function onJdCardClick() {
+    if (!ensureCanUseInterviewFeatures()) return
+
     const el = jdFileInputRef.value
     if ((jobDescriptionUploadState.value === 'idle' || jobDescriptionUploadState.value === 'error') && el && typeof el.click === 'function') {
         el.click()
@@ -1017,6 +1090,7 @@ function onJdCardClick() {
 }
 
 function onJdFileChange(e) {
+    if (!ensureCanUseInterviewFeatures()) return
     jdInputMode.value = 'file'
     const file = e.target.files?.[0]
     console.log('🔍 onJdFileChange called, file:', file?.name)
@@ -1025,12 +1099,14 @@ function onJdFileChange(e) {
 
 function onJdDrop(e) {
     e.preventDefault()
+    if (!ensureCanUseInterviewFeatures()) return
     const file = e.dataTransfer.files?.[0]
     console.log('🔍 onJdDrop called, file:', file?.name)
     if (file) handleJdFileUploadRequest(file)
 }
 
 async function handleJdFileUploadRequest(file) {
+    if (!ensureCanUseInterviewFeatures()) return
     console.log('▶️ handleJdFileUploadRequest started, file:', file?.name)
     if (!file) return
 
@@ -1105,9 +1181,15 @@ async function handleJdFileUploadRequest(file) {
 }
 
 async function handleJdTextUploadRequest() {
+    if (!ensureCanUseInterviewFeatures()) return
+
     const text = jobDescriptionText.value.trim()
     if (!text) {
-        ElMessage.error('Vui lòng dán nội dung mô tả công việc')
+        ElNotification.warning({
+            title: 'Thiếu nội dung',
+            message: 'Vui lòng dán nội dung mô tả công việc vào ô văn bản.',
+            duration: 3000,
+        })
         return
     }
 
@@ -1134,7 +1216,11 @@ async function handleJdTextUploadRequest() {
         jobDescriptionFileName.value = response.data.file_name || 'job_description.txt'
         jobDescriptionUploadState.value = 'success'
         jdErrorMsg.value = ''
-        ElMessage.success('Đã gửi JD dạng text thành công')
+        ElNotification.success({
+            title: 'Thành công',
+            message: 'Đã gửi JD dạng text thành công',
+            duration: 3000,
+        })
     } catch (err) {
         jobDescriptionUploadState.value = 'error'
         jdErrorMsg.value = err.response?.data?.detail || err.message || 'Có lỗi xảy ra, vui lòng thử lại'
@@ -1142,6 +1228,8 @@ async function handleJdTextUploadRequest() {
 }
 
 function onCompanyCardClick() {
+    if (!ensureCanUseInterviewFeatures()) return
+
     const el = companyFileInputRef.value
     if ((companyUploadState.value === 'idle' || companyUploadState.value === 'error') && el && typeof el.click === 'function') {
         el.click()
@@ -1158,6 +1246,7 @@ function onCompanyCardClick() {
 }
 
 function onCompanyFileChange(e) {
+    if (!ensureCanUseInterviewFeatures()) return
     const file = e.target.files?.[0]
     console.log('onCompanyFileChange called, file:', file?.name)
     if (file) handleCompanyFileUploadRequest(file)
@@ -1165,12 +1254,14 @@ function onCompanyFileChange(e) {
 
 function onCompanyDrop(e) {
     e.preventDefault()
+    if (!ensureCanUseInterviewFeatures()) return
     const file = e.dataTransfer.files?.[0]
     console.log('onCompanyDrop called, file:', file?.name)
     if (file) handleCompanyFileUploadRequest(file)
 }
 
 async function handleCompanyFileUploadRequest(file) {
+    if (!ensureCanUseInterviewFeatures()) return
     console.log('handleCompanyFileUploadRequest started, file:', file?.name)
     if (!file) return
 
@@ -1220,9 +1311,15 @@ async function handleCompanyFileUploadRequest(file) {
 }
 
 async function handleCompanyTextUploadRequest() {
+    if (!ensureCanUseInterviewFeatures()) return
+
     const text = companyResearchText.value.trim()
     if (!text) {
-        ElMessage.error('Vui lòng dán nội dung nghiên cứu công ty')
+        ElNotification.error({
+            title: 'Thiếu nội dung',
+            message: 'Vui lòng dán nội dung nghiên cứu công ty.',
+            duration: 3000,
+        })
         return
     }
 
@@ -1249,7 +1346,11 @@ async function handleCompanyTextUploadRequest() {
         companyFileName.value = response.data.file_name || 'company_research.txt'
         companyUploadState.value = 'success'
         companyErrorMsg.value = ''
-        ElMessage.success('Đã gửi Company Research dạng text thành công')
+        ElNotification.success({
+            title: 'Thành công',
+            message: 'Đã gửi Company Research dạng text thành công',
+            duration: 3000,
+        })
     } catch (err) {
         companyUploadState.value = 'error'
         companyErrorMsg.value = err.response?.data?.detail || err.message || 'Có lỗi xảy ra, vui lòng thử lại'
@@ -1280,6 +1381,28 @@ function scrollToAnalysisPanel() {
         }, 300)
     }
 }
+
+watch(sessionId, async (newSessionId) => {
+    if (!newSessionId) return
+
+    console.log('New session ID:', newSessionId)
+    await getInforInterview(newSessionId)  // await để đảm bảo xong mới check
+
+    // Kiểm tra null-safe trước khi truy cập
+    const overallScore = analysisData.value?.analysis.data.overall_score
+
+    console.log('overall_score:', overallScore)
+    console.log('analysisData:', analysisData.value)
+
+    if (overallScore < 30) {
+        console.log('CV không phù hợp với công việc')
+        analysisReady.value = false
+    } else {
+        analysisReady.value = true
+    }
+
+    console.log('analysisReady:', analysisReady.value)
+})
 
 // Watch CV and JD ready state to update step and auto-scroll
 watch([cvReady, jdReady], ([cvReadyVal, jdReadyVal]) => {
@@ -1353,5 +1476,11 @@ watch([cvReady, jdReady], ([cvReadyVal, jdReadyVal]) => {
     /* giống #1e3a8a36 */
     backdrop-filter: blur(12px);
     border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.btn-common:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
 }
 </style>

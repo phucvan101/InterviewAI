@@ -16,7 +16,7 @@
         <div class="mb-8 flex justify-center">
           <span class="badge-gpt">
             <span class="badge-gpt-dot" />
-            Đã tích hợp giọng nói GPT-4o
+            Đã tích hợp giọng nói GPT-4o-mini
           </span>
         </div>
 
@@ -26,20 +26,19 @@
         </h1>
 
         <p class="mx-auto mb-10 max-w-2xl text-base leading-relaxed sm:text-lg" style="color: var(--text-muted);">
-          Tải lên CV của bạn, dán mô tả công việc và để AI được hỗ trợ bởi
-          RAG của chúng tôi mô phỏng môi trường phỏng vấn hoàn hảo được
+          Tải lên CV của bạn, dán mô tả công việc và để AI của chúng tôi mô phỏng môi trường phỏng vấn hoàn hảo được
           thiết kế dành riêng cho bạn.
         </p>
 
         <div class="flex flex-wrap items-center justify-center gap-4">
-          <RouterLink to="/webrtc"
+          <RouterLink to="/login"
             class="inline-flex items-center justify-center gap-2 rounded-2xl px-8 py-4 text-base font-bold text-white transition-all duration-200"
             style="background: var(--primary);"
             onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 10px 32px rgba(109,67,245,0.5)'"
             onmouseout="this.style.transform='';this.style.boxShadow=''">
             Bắt đầu luyện tập
           </RouterLink>
-          <button
+          <RouterLink :to="{ name: 'home', hash: '#demo' }"
             class="inline-flex items-center justify-center gap-3 rounded-2xl border px-8 py-4 text-base font-bold text-white transition-all duration-200"
             style="background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15);"
             onmouseover="this.style.background='rgba(255,255,255,0.1)';this.style.transform='translateY(-2px)'"
@@ -51,7 +50,7 @@
               </svg>
             </span>
             Xem Demo
-          </button>
+          </RouterLink>
         </div>
 
         <div class="mt-20 border-t" style="border-color: rgba(255,255,255,0.08);" />
@@ -67,8 +66,63 @@
       </div>
     </section>
 
+    <!-- ── Demo Video Section ── -->
+    <section id="demo" class="mx-auto scroll-mt-20 px-6 py-24 lg:px-24"
+      style="background: var(--bg-linear-gradient);">
+      <div class="grid items-center gap-10 lg:grid-cols-[0.9fr_1.1fr]">
+        <div>
+          <span class="badge-gpt mb-5">
+            <span class="badge-gpt-dot" />
+            Video demo
+          </span>
+          <h2 class="heading-gradient mb-5 text-4xl font-black lg:text-5xl" style="line-height: 1.25;">
+            Xem cách AI mô phỏng buổi phỏng vấn
+          </h2>
+          <p class="max-w-xl text-base leading-relaxed sm:text-lg" style="color: var(--text-muted);">
+            Demo nhanh quy trình tải CV, phân tích JD, luyện trả lời bằng giọng nói và nhận phản hồi sau phiên phỏng
+            vấn.
+          </p>
+        </div>
+
+        <div class="relative overflow-hidden rounded-2xl border card-glass" style="border-color: rgba(255,255,255,0.08);">
+          <div class="aspect-video bg-slate-950">
+            <div class="relative h-full overflow-hidden">
+              <img :src="avatarAI" alt="Video demo AI Interview Prep"
+                class="h-full w-full object-cover opacity-45" />
+              <div class="absolute inset-0"
+                style="background: linear-gradient(135deg, rgba(2,6,23,0.5), rgba(79,70,229,0.18));" />
+
+              <button type="button" @click="demoPlaying = !demoPlaying"
+                class="absolute left-1/2 top-1/2 flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-white transition-all duration-200"
+                style="background: rgba(79,70,229,0.92); box-shadow: 0 18px 48px rgba(79,70,229,0.45);"
+                :aria-label="demoPlaying ? 'Tạm dừng video demo' : 'Phát video demo'">
+                <svg v-if="!demoPlaying" class="h-8 w-8 translate-x-0.5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+                <svg v-else class="h-8 w-8" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M7 5h4v14H7zM13 5h4v14h-4z" />
+                </svg>
+              </button>
+
+              <div class="absolute bottom-0 left-0 right-0 p-5">
+                <div class="mb-3 flex items-center justify-between text-xs font-semibold text-white">
+                  <span>{{ demoPlaying ? 'Đang phát demo' : 'AI Mock Interview Demo' }}</span>
+                  <span>02:15</span>
+                </div>
+                <div class="h-1.5 overflow-hidden rounded-full" style="background: rgba(255,255,255,0.18);">
+                  <div class="h-full rounded-full transition-all duration-500"
+                    :class="demoPlaying ? 'w-4/5' : 'w-2/5'" style="background: var(--primary);" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- ── Steps Section ── -->
-    <section ref="stepsSection" class="mx-auto px-10 py-16 lg:px-24 min-h-screen flex items-center"
+    <section id="steps" ref="stepsSection"
+      class="mx-auto scroll-mt-20 px-10 py-16 lg:px-24 min-h-screen flex items-center"
       style="background: var(--bg-gray);">
       <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <!-- Left column -->
@@ -122,7 +176,8 @@
     <FeaturesSection />
 
     <!-- ── Testimonials Section ── -->
-    <section ref="testimonialsSection" class="mx-auto px-10 py-24 lg:px-24" style="background: var(--bg-gray);">
+    <section id="testimonials" ref="testimonialsSection" class="mx-auto scroll-mt-20 px-10 py-24 lg:px-24"
+      style="background: var(--bg-gray);">
       <!-- Heading -->
       <div class="text-center mb-12 transition-all duration-700 ease-out"
         :class="testimonialsRevealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'">
@@ -208,7 +263,7 @@
         <p class="text-base mb-6" style="color: rgba(255,255,255,0.8);">
           Tham gia cùng hàng ngàn ứng viên đang được hỗ trợ bởi AI để đạt được công việc mơ ước.
         </p>
-        <RouterLink to="/signup"
+        <RouterLink to="/login"
           class="inline-block px-8 py-4 rounded-2xl font-bold text-white transition-all duration-200"
           style="background: linear-gradient(90deg,#5048E5,#1e3a8a); box-shadow: 0 10px 30px rgba(109,67,245,0.22);"
           onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 14px 36px rgba(109,67,245,0.4)'"
@@ -238,11 +293,13 @@ import ngan_hang from '../assets/icon/home/ngan_hang.svg'
 import phan_hoi from '../assets/icon/home/phan_hoi.svg'
 import phan_tich_giong_noi from '../assets/icon/home/phan_tich_giong_noi.svg'
 import hieu_suat from '../assets/icon/home/hieu_suat.svg'
+import avatarAI from '../assets/image/avatarAI.png'
 
 // ── Template refs ──────────────────────────────────────────
 const el = ref(null)
 const stepsSection = ref(null)
 const testimonialsSection = ref(null)
+const demoPlaying = ref(false)
 
 // ── Reveal state — MỖI SECTION MỘT BIẾN RIÊNG ──────────────
 const stepsRevealed = ref(false)
